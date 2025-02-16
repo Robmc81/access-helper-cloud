@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -43,13 +44,16 @@ const Index = () => {
 
   const handleAccessRequest = async (values: z.infer<typeof formSchema>) => {
     setIsRequestingAccess(true);
-    // Store the request in our simple datastore
+    // Store the request in our simple datastore with proper typing
     const requestId = crypto.randomUUID();
-    accessRequests.set(requestId, {
-      ...values,
-      status: 'pending',
+    const requestData = {
+      fullName: values.fullName,
+      email: values.email,
+      department: values.department,
+      status: 'pending' as const,
       timestamp: new Date(),
-    });
+    };
+    accessRequests.set(requestId, requestData);
     
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
