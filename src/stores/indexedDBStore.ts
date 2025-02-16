@@ -1,4 +1,3 @@
-
 import { openDB } from 'idb';
 import { toast } from "sonner";
 
@@ -140,8 +139,9 @@ export const scheduleAutoBackup = async () => {
       const dirHandle = await window.showDirectoryPicker();
       localStorage.setItem('autoBackupEnabled', 'true');
       
-      const grantPermission = await dirHandle.requestPermission({ mode: 'readwrite' });
-      if (grantPermission === 'granted') {
+      const permission = await dirHandle.requestPermission({ mode: 'readwrite' }) as FileSystemPermissionStatus;
+      
+      if (permission === 'granted') {
         const backupData = {
           accessRequests: await getAllFromIndexedDB('accessRequests'),
           identityStore: await getAllFromIndexedDB('identityStore'),
