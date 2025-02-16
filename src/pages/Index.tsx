@@ -4,14 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { User, UserPlus, Lock, Search, Workflow } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleAccessRequest = () => {
     setIsRequestingAccess(true);
     toast.success("Access request submitted successfully!");
-    setTimeout(() => setIsRequestingAccess(false), 2000);
+    setTimeout(() => {
+      setIsRequestingAccess(false);
+      navigate("/dashboard");
+    }, 2000);
+  };
+
+  const handleTileClick = (route: string) => {
+    navigate(route);
   };
 
   return (
@@ -50,10 +59,11 @@ const Index = () => {
           {features.map((feature, index) => (
             <Card
               key={feature.title}
-              className="p-6 glass-card hover-scale animate-fadeIn"
+              className="p-6 glass-card hover-scale cursor-pointer transition-all"
               style={{
                 animationDelay: `${index * 100}ms`,
               }}
+              onClick={() => handleTileClick(feature.route)}
             >
               <feature.icon className="w-12 h-12 p-2 mb-4 text-success bg-success/10 rounded-lg" />
               <h3 className="mb-2 text-xl font-semibold">{feature.title}</h3>
@@ -72,18 +82,21 @@ const features = [
     title: "Identity Management",
     description:
       "Centralized identity store with powerful search capabilities for efficient user management.",
+    route: "/dashboard",
   },
   {
     icon: Workflow,
     title: "Workflow Automation",
     description:
       "Streamline access requests with automated approval workflows and notifications.",
+    route: "/dashboard",
   },
   {
     icon: Search,
     title: "Quick Search",
     description:
       "Find and manage user entitlements quickly with our advanced search functionality.",
+    route: "/catalog",
   },
 ];
 
