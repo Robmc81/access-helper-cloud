@@ -6,6 +6,7 @@ import { BackupRestore } from "@/components/admin/BackupRestore";
 import { ConnectorSettings } from "@/components/admin/ConnectorSettings";
 import { LogsCard } from "@/components/admin/LogsCard";
 import { LogicAppsTile } from "@/components/admin/LogicAppsTile";
+import { OpenLDAPConfig } from "@/components/admin/OpenLDAPConfig";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ const Admin = () => {
 
         <div className="space-y-6">
           <LogicAppsTile />
+          <OpenLDAPConfig />
           <ConnectorSettings />
           <LogsCard />
           <BackupRestore />

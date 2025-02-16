@@ -1,4 +1,3 @@
-
 import { openDB } from 'idb';
 import { toast } from "sonner";
 
@@ -298,35 +297,105 @@ export const provisionIdentity = async (userData: {
       status: 'active',
     };
 
+    // Store in IndexedDB
     const tx = db.transaction('identityStore', 'readwrite');
     const store = tx.objectStore('identityStore');
     
     // Check if user already exists
     const existingUser = await store.get(userData.email);
+    
+    // Save to IndexedDB
     if (existingUser) {
-      // Update existing user
       await store.put({
         ...existingUser,
         ...identityData,
         updatedAt: new Date(),
       });
-      toast.success(`Updated user: ${userData.fullName}`);
     } else {
-      // Create new user
       await store.put(identityData);
-      toast.success(`Provisioned new user: ${userData.fullName}`);
     }
     
     await tx.done;
     
-    // Create sync record for this operation
+    // Create sync record
     await createSyncRecord('identity', existingUser ? 'update' : 'create', identityData);
+
+    // Provision to OpenLDAP if configured
+    const config = await getOpenLDAPConfig();
+    if (config && config.enabled) {
+      await provisionToOpenLDAP(identityData, config);
+    }
     
+    toast.success(`${existingUser ? 'Updated' : 'Provisioned'} user: ${userData.fullName}`);
     return identityData;
   } catch (error) {
     console.error('Error provisioning identity:', error);
     await addLog('ERROR', `Failed to provision identity: ${userData.email}`, { error: error.message });
     toast.error(`Failed to provision user: ${userData.fullName}`);
+    throw error;
+  }
+};
+
+interface OpenLDAPConfig {
+  enabled: boolean;
+  url: string;
+  bindDN: string;
+  bindPassword: string;
+  baseDN: string;
+  userContainer: string;
+}
+
+export const getOpenLDAPConfig = async (): Promise<OpenLDAPConfig | null> => {
+  try {
+    const tx = db.transaction('systemConfig', 'readonly');
+    const store = tx.objectStore('systemConfig');
+    return await store.get('openldap');
+  } catch (error) {
+    console.error('Error getting OpenLDAP config:', error);
+    return null;
+  }
+};
+
+export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
+  try {
+    const tx = db.transaction('systemConfig', 'readwrite');
+    const store = tx.objectStore('systemConfig');
+    await store.put(config, 'openldap');
+    await tx.done;
+    await addLog('INFO', 'OpenLDAP configuration updated', { config: { ...config, bindPassword: '***' } });
+    toast.success('OpenLDAP configuration saved successfully');
+  } catch (error) {
+    console.error('Error saving OpenLDAP config:', error);
+    await addLog('ERROR', 'Failed to save OpenLDAP configuration', { error: error.message });
+    toast.error('Failed to save OpenLDAP configuration');
+    throw error;
+  }
+};
+
+const provisionToOpenLDAP = async (userData: any, config: OpenLDAPConfig) => {
+  try {
+    const response = await fetch('/api/ldap/provision', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userData,
+        ldapConfig: {
+          ...config,
+          bindPassword: '***' // Don't send actual password in logs
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to provision to OpenLDAP: ${response.statusText}`);
+    }
+
+    await addLog('INFO', `User provisioned to OpenLDAP: ${userData.email}`);
+  } catch (error) {
+    console.error('OpenLDAP provisioning error:', error);
+    await addLog('ERROR', `Failed to provision to OpenLDAP: ${userData.email}`, { error: error.message });
     throw error;
   }
 };
