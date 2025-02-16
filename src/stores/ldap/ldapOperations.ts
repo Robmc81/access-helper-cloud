@@ -1,5 +1,5 @@
 
-import { db } from '../db/dbConfig';
+import { getDB } from '../db/dbConfig';
 import { toast } from "sonner";
 import { addLog } from '../logging/systemLogs';
 
@@ -102,6 +102,7 @@ export const provisionToOpenLDAP = async (userData: any, config: OpenLDAPConfig)
 
 export const getOpenLDAPConfig = async (): Promise<OpenLDAPConfig | null> => {
   try {
+    const db = await getDB();
     const tx = db.transaction('systemConfig', 'readonly');
     const store = tx.objectStore('systemConfig');
     const config = await store.get('openldap');
@@ -139,6 +140,7 @@ export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
       throw new Error('User Container is required');
     }
 
+    const db = await getDB();
     const tx = db.transaction('systemConfig', 'readwrite');
     const store = tx.objectStore('systemConfig');
     

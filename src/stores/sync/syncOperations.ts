@@ -1,5 +1,5 @@
 
-import { db, saveToIndexedDB, getAllFromIndexedDB } from '../db/dbConfig';
+import { getDB, saveToIndexedDB, getAllFromIndexedDB } from '../db/dbConfig';
 
 export interface SyncRecord {
   id: string;
@@ -34,6 +34,7 @@ export const getPendingSyncRecords = async (): Promise<SyncRecord[]> => {
 };
 
 export const markAsSynced = async (id: string) => {
+  const db = await getDB();
   const tx = db.transaction('syncStore', 'readwrite');
   const store = tx.objectStore('syncStore');
   const record = await store.get(id);

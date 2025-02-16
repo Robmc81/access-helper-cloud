@@ -1,5 +1,5 @@
 
-import { db } from '../db/dbConfig';
+import { getDB } from '../db/dbConfig';
 
 export interface SystemLog {
   id: string;
@@ -23,6 +23,7 @@ export const addLog = async (
       details
     };
     
+    const db = await getDB();
     const tx = db.transaction('systemLogs', 'readwrite');
     const store = tx.objectStore('systemLogs');
     await store.add(log);
@@ -34,6 +35,7 @@ export const addLog = async (
 
 export const getLogs = async (limit = 100): Promise<SystemLog[]> => {
   try {
+    const db = await getDB();
     const tx = db.transaction('systemLogs', 'readonly');
     const store = tx.objectStore('systemLogs');
     const logs = await store.getAll();
