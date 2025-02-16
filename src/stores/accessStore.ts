@@ -19,7 +19,20 @@ const loadStoredData = <T>(key: string): Map<string, T> => {
 // Save data to localStorage
 const saveData = (key: string, data: Map<any, any>) => {
   try {
-    localStorage.setItem(key, JSON.stringify(Array.from(data.entries())));
+    // Convert Date objects to ISO strings before saving
+    const serializedData = Array.from(data.entries()).map(([k, v]) => {
+      if (v.timestamp instanceof Date) {
+        v = { ...v, timestamp: v.timestamp.toISOString() };
+      }
+      if (v.approvedAt instanceof Date) {
+        v = { ...v, approvedAt: v.approvedAt.toISOString() };
+      }
+      if (v.createdAt instanceof Date) {
+        v = { ...v, createdAt: v.createdAt.toISOString() };
+      }
+      return [k, v];
+    });
+    localStorage.setItem(key, JSON.stringify(serializedData));
   } catch (error) {
     console.error(`Error saving data for ${key}:`, error);
   }
@@ -60,7 +73,7 @@ identityStore.set = function(key, value) {
 
 // Convert stored date strings back to Date objects immediately after loading
 for (const [key, value] of accessRequests.entries()) {
-  if (!(value.timestamp instanceof Date)) {
+  if (typeof value.timestamp === 'string') {
     accessRequests.set(key, {
       ...value,
       timestamp: new Date(value.timestamp),
@@ -70,7 +83,7 @@ for (const [key, value] of accessRequests.entries()) {
 }
 
 for (const [key, value] of identityStore.entries()) {
-  if (!(value.createdAt instanceof Date)) {
+  if (typeof value.createdAt === 'string') {
     identityStore.set(key, {
       ...value,
       createdAt: new Date(value.createdAt)
