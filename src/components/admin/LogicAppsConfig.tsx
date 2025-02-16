@@ -17,11 +17,22 @@ import { Info, RefreshCw, Edit2, Check, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const LogicAppsConfig = () => {
   const [testing, setTesting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [endpointUrl, setEndpointUrl] = useState(window.location.origin + '/api/provision');
+  const [protocol, setProtocol] = useState("http");
+  const [hostAddress, setHostAddress] = useState("localhost:3000");
+  const [path, setPath] = useState("/api/provision");
+
+  const fullEndpointUrl = `${protocol}://${hostAddress}${path}`;
 
   const testWorkflow = async () => {
     setTesting(true);
@@ -37,16 +48,16 @@ export const LogicAppsConfig = () => {
   };
 
   const handleSaveEndpoint = () => {
-    if (!endpointUrl) {
-      toast.error("Endpoint URL cannot be empty");
+    if (!hostAddress) {
+      toast.error("Host address cannot be empty");
       return;
     }
     try {
-      new URL(endpointUrl); // Validate URL format
+      new URL(fullEndpointUrl); // Validate URL format
       setIsEditing(false);
       toast.success("Endpoint URL updated successfully");
     } catch (e) {
-      toast.error("Please enter a valid URL");
+      toast.error("Please enter a valid host address");
     }
   };
 
@@ -63,38 +74,60 @@ export const LogicAppsConfig = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Endpoint Configuration</h3>
           <p className="text-sm text-gray-600">
-            Use the following endpoint in your Logic Apps workflow to provision users:
+            Configure the endpoint for your DDIL server to receive provisioning requests:
           </p>
           <div className="relative">
             {isEditing ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  value={endpointUrl}
-                  onChange={(e) => setEndpointUrl(e.target.value)}
-                  className="flex-1"
-                  placeholder="Enter endpoint URL"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleSaveEndpoint}
-                  className="h-10 w-10"
-                >
-                  <Check className="h-4 w-4 text-green-500" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsEditing(false)}
-                  className="h-10 w-10"
-                >
-                  <X className="h-4 w-4 text-red-500" />
-                </Button>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={protocol}
+                    onValueChange={setProtocol}
+                  >
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="http">HTTP</SelectItem>
+                      <SelectItem value="https">HTTPS</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    value={hostAddress}
+                    onChange={(e) => setHostAddress(e.target.value)}
+                    className="flex-1"
+                    placeholder="Enter IP address or hostname (e.g., 192.168.1.100:3000)"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={path}
+                    onChange={(e) => setPath(e.target.value)}
+                    className="flex-1"
+                    placeholder="API path (e.g., /api/provision)"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSaveEndpoint}
+                    className="h-10 w-10"
+                  >
+                    <Check className="h-4 w-4 text-green-500" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsEditing(false)}
+                    className="h-10 w-10"
+                  >
+                    <X className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <code className="block bg-gray-100 p-3 rounded-md text-sm flex-1">
-                  {endpointUrl}
+                  {fullEndpointUrl}
                 </code>
                 <Button
                   variant="ghost"
