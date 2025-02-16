@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,98 +18,18 @@ const STORE_NAME = 'systemConfig';
 
 export const LogicAppsTile = () => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [workflowUrl, setWorkflowUrl] = useState("");
-  const [newUrl, setNewUrl] = useState("");
-  const [db, setDb] = useState<IDBDatabase | null>(null);
-
-  useEffect(() => {
-    const initDb = () => {
-      const request = window.indexedDB.open(DB_NAME, 1);
-
-      request.onerror = async (event) => {
-        console.error('Database error:', event);
-        await addLog('ERROR', 'Failed to open database', { error: 'Database error' });
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBRequest).result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME);
-        }
-      };
-
-      request.onsuccess = async (event) => {
-        const db = (event.target as IDBRequest).result;
-        setDb(db);
-        
-        try {
-          const transaction = db.transaction(STORE_NAME, 'readonly');
-          const store = transaction.objectStore(STORE_NAME);
-          const request = store.get('logicAppWorkflowUrl');
-          
-          request.onsuccess = () => {
-            if (request.result) {
-              setWorkflowUrl(request.result);
-              setNewUrl(request.result);
-            }
-          };
-        } catch (error) {
-          console.error('Transaction error:', error);
-          await addLog('ERROR', 'Failed to read workflow URL', { error: String(error) });
-        }
-      };
-    };
-
-    initDb();
-
-    return () => {
-      if (db) {
-        db.close();
-      }
-    };
-  }, []);
+  const [workflowUrl, setWorkflowUrl] = useState("https://prod-01.northcentralus.logic.azure.com:443/workflows/70b2a44d77534c67a9556e148bc07946/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=8aORmU8_I6hdR7IjWBqLauU03sXEvZBqtCiwKiBeW_c");
+  const [newUrl, setNewUrl] = useState("https://prod-01.northcentralus.logic.azure.com:443/workflows/70b2a44d77534c67a9556e148bc07946/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=8aORmU8_I6hdR7IjWBqLauU03sXEvZBqtCiwKiBeW_c");
 
   const handleConfigure = () => {
     setIsConfigOpen(true);
   };
 
   const handleSave = async () => {
-    if (!db) {
-      toast.error('Database not initialized');
-      return;
-    }
-
-    try {
-      // Basic URL validation
-      new URL(newUrl);
-      
-      try {
-        const transaction = db.transaction(STORE_NAME, 'readwrite');
-        const store = transaction.objectStore(STORE_NAME);
-        store.put(newUrl, 'logicAppWorkflowUrl');
-        
-        transaction.oncomplete = async () => {
-          setWorkflowUrl(newUrl);
-          setIsConfigOpen(false);
-          toast.success('Workflow URL saved successfully');
-          await addLog('INFO', 'Logic App workflow URL updated', { url: newUrl });
-        };
-
-        transaction.onerror = async (event) => {
-          console.error('Transaction error:', event);
-          toast.error('Failed to save workflow URL');
-          await addLog('ERROR', 'Failed to save workflow URL', { error: 'Transaction error' });
-        };
-      } catch (error) {
-        console.error('Transaction error:', error);
-        toast.error('Failed to save workflow URL');
-        await addLog('ERROR', 'Failed to save workflow URL', { error: String(error) });
-      }
-    } catch (error) {
-      console.error('Error saving workflow URL:', error);
-      toast.error('Please enter a valid URL');
-      await addLog('ERROR', 'Failed to save workflow URL', { error: String(error) });
-    }
+    setWorkflowUrl(newUrl);
+    setIsConfigOpen(false);
+    toast.success('Workflow URL saved successfully');
+    await addLog('INFO', 'Logic App workflow URL updated', { url: newUrl });
   };
 
   return (
