@@ -71,16 +71,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="fixed top-4 left-4 z-10">
-        <img 
-          src="/lovable-uploads/bd8565df-34df-4671-aed8-f98870e9b36d.png" 
-          alt="U.S. Army Logo" 
-          className="w-24 h-auto"
-        />
-        <h1 className="mt-2 text-2xl font-bold tracking-tight">
-          OCG DDIL
-        </h1>
-      </div>
       <div className="fixed top-4 right-4 z-10">
         <Button
           variant="ghost"
@@ -92,8 +82,19 @@ const Index = () => {
         </Button>
       </div>
       <div className="container px-4 mx-auto">
-        <div className="pt-32 pb-16">
-          <div className="flex flex-col items-center gap-4 animate-fadeIn sm:flex-row sm:justify-center">
+        <div className="flex flex-col items-start gap-4 pt-4">
+          <div className="mb-8">
+            <img 
+              src="/lovable-uploads/bd8565df-34df-4671-aed8-f98870e9b36d.png" 
+              alt="U.S. Army Logo" 
+              className="w-24 h-auto"
+            />
+            <h1 className="mt-2 text-2xl font-bold tracking-tight">
+              OCG DDIL
+            </h1>
+          </div>
+          
+          <div className="w-full flex flex-col items-center gap-4 animate-fadeIn sm:flex-row sm:justify-start">
             <Button
               size="lg"
               className="w-full animate-fadeIn hover-scale sm:w-auto"
@@ -132,7 +133,7 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="space-y-8">
+        <div className="mt-16 space-y-8">
           {features.map((feature, index) => (
             <Card
               key={feature.title}
