@@ -14,14 +14,64 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Info, RefreshCw, Edit2, Check, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { addLog } from "@/stores/indexedDBStore";
 
 export const LogicAppsConfig = () => {
   const [testing, setTesting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [workflowUrl, setWorkflowUrl] = useState("");
+
+  // Load workflow URL from IndexedDB on component mount
+  useEffect(() => {
+    const loadWorkflowUrl = async () => {
+      try {
+        const db = await window.indexedDB.open("ocgDDIL", 1);
+        db.onsuccess = (event) => {
+          const database = (event.target as IDBOpenDBRequest).result;
+          const transaction = database.transaction("systemConfig", "readonly");
+          const store = transaction.objectStore("systemConfig");
+          const request = store.get("workflowUrl");
+          
+          request.onsuccess = () => {
+            if (request.result) {
+              setWorkflowUrl(request.result);
+            }
+          };
+        };
+
+        db.onupgradeneeded = (event) => {
+          const database = (event.target as IDBOpenDBRequest).result;
+          if (!database.objectStoreNames.contains("systemConfig")) {
+            database.createObjectStore("systemConfig");
+          }
+        };
+      } catch (error) {
+        console.error("Error loading workflow URL:", error);
+        await addLog("ERROR", "Failed to load Logic Apps workflow URL", { error });
+      }
+    };
+
+    loadWorkflowUrl();
+  }, []);
+
+  const saveWorkflowUrl = async (url: string) => {
+    try {
+      const db = await window.indexedDB.open("ocgDDIL", 1);
+      db.onsuccess = (event) => {
+        const database = (event.target as IDBOpenDBRequest).result;
+        const transaction = database.transaction("systemConfig", "readwrite");
+        const store = transaction.objectStore("systemConfig");
+        store.put(url, "workflowUrl");
+      };
+      await addLog("INFO", "Logic Apps workflow URL updated", { url });
+    } catch (error) {
+      console.error("Error saving workflow URL:", error);
+      await addLog("ERROR", "Failed to save Logic Apps workflow URL", { error });
+    }
+  };
 
   const testWorkflow = async () => {
     if (!workflowUrl) {
@@ -31,6 +81,8 @@ export const LogicAppsConfig = () => {
 
     setTesting(true);
     try {
+      await addLog("INFO", "Testing Logic Apps workflow", { url: workflowUrl });
+      
       // Test payload
       const testPayload = {
         email: "test@example.com",
@@ -53,22 +105,31 @@ export const LogicAppsConfig = () => {
 
       const data = await response.json();
       console.log("Logic Apps test response:", data);
+      await addLog("INFO", "Logic Apps workflow test successful", { 
+        response: data,
+        payload: testPayload 
+      });
       toast.success("Logic Apps workflow test successful");
     } catch (error) {
       console.error("Logic Apps test error:", error);
+      await addLog("ERROR", "Logic Apps workflow test failed", { 
+        error: error.message,
+        url: workflowUrl 
+      });
       toast.error("Failed to test Logic Apps workflow");
     } finally {
       setTesting(false);
     }
   };
 
-  const handleSaveEndpoint = () => {
+  const handleSaveEndpoint = async () => {
     if (!workflowUrl) {
       toast.error("Workflow URL cannot be empty");
       return;
     }
     try {
       new URL(workflowUrl); // Validate URL format
+      await saveWorkflowUrl(workflowUrl);
       setIsEditing(false);
       toast.success("Logic Apps workflow URL updated successfully");
     } catch (e) {

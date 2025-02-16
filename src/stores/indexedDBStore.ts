@@ -32,6 +32,9 @@ const db = await openDB(DB_NAME, DB_VERSION, {
     if (!db.objectStoreNames.contains('systemLogs')) {
       db.createObjectStore('systemLogs', { keyPath: 'id' });
     }
+    if (!db.objectStoreNames.contains('systemConfig')) {
+      db.createObjectStore('systemConfig');
+    }
   },
 });
 
