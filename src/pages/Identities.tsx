@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Settings } from "lucide-react";
+import { Home, Settings, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
 

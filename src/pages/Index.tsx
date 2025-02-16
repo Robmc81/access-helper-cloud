@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { accessRequests } from "@/stores/accessStore";
@@ -12,6 +11,7 @@ import { ActionButtons } from "@/components/access/ActionButtons";
 import { FeatureCards } from "@/components/access/FeatureCards";
 import { GroupRequestSheet } from "@/components/access/GroupRequestSheet";
 import { groups } from "@/stores/groupStore";
+import { useLocation } from "react-router-dom";
 
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
@@ -21,6 +21,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isRequestingForOther, setIsRequestingForOther] = useState(false);
+  const location = useLocation();
 
   const form = useForm({
     defaultValues: {
@@ -30,10 +31,20 @@ const Index = () => {
     },
   });
 
-  const openDialog = (type: 'regular' | 'guest') => {
-    setDialogType(type);
-    setShowDialog(true);
-  };
+  useEffect(() => {
+    const state = location.state as { requestGroupForUser?: { 
+      fullName: string;
+      email: string;
+      department: string;
+    }};
+    
+    if (state?.requestGroupForUser) {
+      form.reset(state.requestGroupForUser);
+      setIsRequestingForOther(true);
+      setSheetOpen(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location, form]);
 
   useEffect(() => {
     const count = Array.from(accessRequests.values()).filter(
@@ -41,6 +52,11 @@ const Index = () => {
     ).length;
     setPendingCount(count);
   }, []);
+
+  const openDialog = (type: 'regular' | 'guest') => {
+    setDialogType(type);
+    setShowDialog(true);
+  };
 
   const handleAccessRequest = async (values: z.infer<typeof formSchema>) => {
     const isGuest = dialogType === 'guest';
