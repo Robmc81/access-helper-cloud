@@ -71,7 +71,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="fixed top-4 left-4">
+      <div className="fixed top-4 left-4 z-10">
         <img 
           src="/lovable-uploads/bd8565df-34df-4671-aed8-f98870e9b36d.png" 
           alt="U.S. Army Logo" 
@@ -81,7 +81,7 @@ const Index = () => {
           OCG DDIL
         </h1>
       </div>
-      <div className="fixed top-4 right-4">
+      <div className="fixed top-4 right-4 z-10">
         <Button
           variant="ghost"
           className="text-gray-600 hover:text-gray-900"
@@ -91,46 +91,48 @@ const Index = () => {
           Admin
         </Button>
       </div>
-      <div className="container px-4 py-16 mx-auto">
-        <div className="flex flex-col items-center gap-4 animate-fadeIn sm:flex-row sm:justify-center">
-          <Button
-            size="lg"
-            className="w-full animate-fadeIn hover-scale sm:w-auto"
-            onClick={() => openDialog('regular')}
-            disabled={isRequestingAccess}
-          >
-            <UserPlus className="w-5 h-5 mr-2" />
-            Request New Account
-          </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="w-full animate-fadeIn hover-scale sm:w-auto"
-            onClick={() => openDialog('guest')}
-            disabled={isRequestingAccess}
-          >
-            <User className="w-5 h-5 mr-2" />
-            Request Guest Account
-          </Button>
-          <Button
-            size="lg"
-            className="w-full animate-fadeIn hover-scale sm:w-auto"
-            onClick={() => navigate("/catalog")}
-          >
-            <AppWindow className="w-5 h-5 mr-2" />
-            Request Application Access
-          </Button>
-          <Button
-            size="lg"
-            className="w-full animate-fadeIn hover-scale sm:w-auto"
-            onClick={() => navigate("/groups")}
-          >
-            <Group className="w-5 h-5 mr-2" />
-            Request Group Access
-          </Button>
+      <div className="container px-4 mx-auto">
+        <div className="pt-32 pb-16">
+          <div className="flex flex-col items-center gap-4 animate-fadeIn sm:flex-row sm:justify-center">
+            <Button
+              size="lg"
+              className="w-full animate-fadeIn hover-scale sm:w-auto"
+              onClick={() => openDialog('regular')}
+              disabled={isRequestingAccess}
+            >
+              <UserPlus className="w-5 h-5 mr-2" />
+              Request New Account
+            </Button>
+            <Button
+              size="lg"
+              variant="secondary"
+              className="w-full animate-fadeIn hover-scale sm:w-auto"
+              onClick={() => openDialog('guest')}
+              disabled={isRequestingAccess}
+            >
+              <User className="w-5 h-5 mr-2" />
+              Request Guest Account
+            </Button>
+            <Button
+              size="lg"
+              className="w-full animate-fadeIn hover-scale sm:w-auto"
+              onClick={() => navigate("/catalog")}
+            >
+              <AppWindow className="w-5 h-5 mr-2" />
+              Request Application Access
+            </Button>
+            <Button
+              size="lg"
+              className="w-full animate-fadeIn hover-scale sm:w-auto"
+              onClick={() => navigate("/groups")}
+            >
+              <Group className="w-5 h-5 mr-2" />
+              Request Group Access
+            </Button>
+          </div>
         </div>
 
-        <div className="mt-24 space-y-8">
+        <div className="space-y-8">
           {features.map((feature, index) => (
             <Card
               key={feature.title}
