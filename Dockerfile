@@ -4,21 +4,17 @@ FROM node:20-alpine as builder
 
 WORKDIR /app
 
-# Install Yarn
-RUN corepack enable && \
-    corepack prepare yarn@stable --activate
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
 
-# Copy only package.json
-COPY package.json ./
-
-# Initialize yarn and install dependencies
-RUN yarn install
+# Install dependencies
+RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN yarn build
+RUN npm run build
 
 # Production stage
 FROM nginx:alpine
