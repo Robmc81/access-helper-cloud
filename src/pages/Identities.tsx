@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Users } from "lucide-react";
+import { Home, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
 
@@ -22,6 +22,15 @@ const Identities = () => {
 
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">Identity Store</h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover-scale flex items-center gap-2"
+            onClick={() => navigate("/admin")}
+          >
+            <Settings className="w-4 h-4" />
+            Admin Portal
+          </Button>
         </div>
         
         <IdentityStoreTable />
