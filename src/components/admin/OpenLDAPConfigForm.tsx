@@ -21,6 +21,7 @@ interface OpenLDAPConfigFormProps {
 
 export const OpenLDAPConfigForm = ({ initialConfig, onSuccess }: OpenLDAPConfigFormProps) => {
   const [config, setConfig] = useState(initialConfig);
+  const [isTesting, setIsTesting] = useState(false);
 
   const handleSave = async () => {
     try {
@@ -33,6 +34,7 @@ export const OpenLDAPConfigForm = ({ initialConfig, onSuccess }: OpenLDAPConfigF
 
   const handleTestConnection = async () => {
     try {
+      setIsTesting(true);
       // Validate required fields
       if (!config.url || !config.bindDN || !config.bindPassword || !config.baseDN || !config.userContainer) {
         toast.error('Please fill in all required fields before testing connection');
@@ -45,12 +47,21 @@ export const OpenLDAPConfigForm = ({ initialConfig, onSuccess }: OpenLDAPConfigF
         throw new Error('Invalid LDAP URL format. Must start with ldap:// or ldaps://');
       }
 
+      toast.loading('Testing connection to OpenLDAP server...');
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
       
-      toast.success('Successfully connected to OpenLDAP server');
+      toast.dismiss();
+      toast.success('Successfully connected to OpenLDAP server', {
+        description: `Connected to ${config.url}`,
+      });
     } catch (error) {
       console.error('OpenLDAP connection test failed:', error);
-      toast.error(error.message || 'Failed to connect to OpenLDAP server');
+      toast.dismiss();
+      toast.error('Connection test failed', {
+        description: error.message || 'Failed to connect to OpenLDAP server',
+      });
+    } finally {
+      setIsTesting(false);
     }
   };
 
@@ -121,8 +132,13 @@ export const OpenLDAPConfigForm = ({ initialConfig, onSuccess }: OpenLDAPConfigF
         <Button onClick={handleSave} className="flex-1">
           Save Configuration
         </Button>
-        <Button onClick={handleTestConnection} variant="outline" className="flex-1">
-          Test Connection
+        <Button 
+          onClick={handleTestConnection} 
+          variant="outline" 
+          className="flex-1"
+          disabled={isTesting}
+        >
+          {isTesting ? 'Testing...' : 'Test Connection'}
         </Button>
       </div>
     </div>
