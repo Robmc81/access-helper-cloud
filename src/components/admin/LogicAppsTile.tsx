@@ -81,11 +81,16 @@ export const LogicAppsTile = () => {
           const store = transaction.objectStore('systemConfig');
           const request = store.put(newUrl, 'logicAppWorkflowUrl');
           
-          request.onsuccess = async () => {
+          transaction.oncomplete = async () => {
             setWorkflowUrl(newUrl);
             setIsConfigOpen(false);
             toast.success('Workflow URL saved successfully');
             await addLog('INFO', 'Logic App workflow URL updated', { url: newUrl });
+          };
+
+          transaction.onerror = async () => {
+            toast.error('Failed to save workflow URL');
+            await addLog('ERROR', 'Failed to save workflow URL', { error: 'Transaction error' });
           };
         } catch (error) {
           console.error('Transaction error:', error);
