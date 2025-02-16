@@ -7,11 +7,15 @@ import { accessRequests, identityStore } from "@/stores/accessStore";
 import { toast } from "sonner";
 import { useState } from "react";
 
+type RequestStatus = 'pending' | 'approved' | 'rejected';
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { requestId, email } = location.state || {};
-  const [currentStatus, setCurrentStatus] = useState(location.state?.status);
+  const [currentStatus, setCurrentStatus] = useState<RequestStatus>(
+    (location.state?.status as RequestStatus) || 'pending'
+  );
 
   const handleApproval = (approved: boolean) => {
     if (!requestId || !accessRequests.has(requestId)) {
@@ -20,7 +24,7 @@ const Dashboard = () => {
     }
 
     const request = accessRequests.get(requestId)!;
-    const newStatus = approved ? 'approved' : 'rejected';
+    const newStatus: RequestStatus = approved ? 'approved' : 'rejected';
     
     // Update the request with new status and approval time
     const updatedRequest = {
