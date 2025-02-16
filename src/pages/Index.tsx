@@ -85,7 +85,6 @@ const Index = () => {
           </Button>
           <Button
             size="lg"
-            variant="secondary"
             className="w-full animate-fadeIn hover-scale sm:w-auto"
             onClick={() => navigate("/catalog")}
           >
@@ -94,7 +93,6 @@ const Index = () => {
           </Button>
           <Button
             size="lg"
-            variant="outline"
             className="w-full animate-fadeIn hover-scale sm:w-auto"
             onClick={() => navigate("/groups")}
           >
