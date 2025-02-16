@@ -11,10 +11,10 @@ export const LogsCard = () => {
     <Card className="p-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Terminal className="w-6 h-6 text-primary" />
+          <Terminal className="w-5 h-5 text-primary" />
           <div>
-            <h2 className="text-2xl font-semibold">System Logs</h2>
-            <p className="text-sm text-gray-600">View and download system activity logs</p>
+            <h2 className="text-lg font-semibold">System Logs</h2>
+            <p className="text-xs text-gray-600">View and download system activity logs</p>
           </div>
         </div>
         <Button
