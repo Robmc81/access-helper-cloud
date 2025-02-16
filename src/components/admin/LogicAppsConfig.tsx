@@ -104,9 +104,11 @@ export const LogicAppsConfig = () => {
         const transaction = db.transaction('systemConfig', 'readwrite');
         const store = transaction.objectStore('systemConfig');
         
-        // Set up transaction handlers
         transaction.oncomplete = () => {
           console.log("Transaction completed successfully");
+          toast.success("Workflow URL saved and configuration updated", {
+            description: "Your changes have been saved successfully."
+          });
           resolve(true);
         };
         
@@ -115,13 +117,11 @@ export const LogicAppsConfig = () => {
           reject(transaction.error);
         };
 
-        // Perform the put operation
         const request = store.put(url, 'workflowUrl');
         
         request.onsuccess = async () => {
           console.log("Put operation successful");
           await addLog("INFO", "Logic Apps workflow URL updated", { url });
-          toast.success("Workflow URL saved successfully");
         };
 
         request.onerror = async () => {
