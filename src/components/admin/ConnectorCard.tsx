@@ -1,15 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RefreshCw, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { toast } from "sonner";
 import { Connector, ConnectorStatus } from "@/types/connector";
-import { useState } from "react";
 
 interface ConnectorCardProps {
   connector: Connector;
-  onSync: (id: string) => void;
-  syncing: string | null;
 }
 
 const getStatusColor = (status: ConnectorStatus) => {
@@ -23,7 +20,7 @@ const getStatusColor = (status: ConnectorStatus) => {
   }
 };
 
-export const ConnectorCard = ({ connector, onSync, syncing }: ConnectorCardProps) => {
+export const ConnectorCard = ({ connector }: ConnectorCardProps) => {
   const handleConfigure = () => {
     toast.info("Strata configuration panel coming soon");
   };
@@ -45,15 +42,7 @@ export const ConnectorCard = ({ connector, onSync, syncing }: ConnectorCardProps
             )}
           </div>
         </div>
-        <div className="flex space-x-2">
-          <Button
-            onClick={() => onSync(connector.id)}
-            disabled={syncing === connector.id}
-            className="hover-scale"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${syncing === connector.id ? 'animate-spin' : ''}`} />
-            {syncing === connector.id ? 'Syncing...' : 'Sync Now'}
-          </Button>
+        <div>
           <Button
             variant="outline"
             className="hover-scale"
