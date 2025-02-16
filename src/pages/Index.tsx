@@ -36,10 +36,13 @@ const features = [
 
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
+  const [isRequestingGuestAccess, setIsRequestingGuestAccess] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
+  const [dialogType, setDialogType] = useState<'regular' | 'guest'>('regular');
   const navigate = useNavigate();
 
   const handleAccessRequest = async (values: z.infer<typeof formSchema>) => {
+    const isGuest = dialogType === 'guest';
     setIsRequestingAccess(true);
     const requestId = crypto.randomUUID();
     const requestData = {
@@ -48,16 +51,22 @@ const Index = () => {
       department: values.department,
       status: 'pending' as const,
       timestamp: new Date(),
+      type: isGuest ? 'guest' : 'regular',
     };
     accessRequests.set(requestId, requestData);
     
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
-    toast.success("Access request submitted successfully! Check pending requests for status.");
+    toast.success(`${isGuest ? 'Guest access' : 'Access'} request submitted successfully! Check pending requests for status.`);
     setShowDialog(false);
     setIsRequestingAccess(false);
     
     console.log("Current access requests:", Array.from(accessRequests.entries()));
+  };
+
+  const openDialog = (type: 'regular' | 'guest') => {
+    setDialogType(type);
+    setShowDialog(true);
   };
 
   return (
@@ -87,11 +96,21 @@ const Index = () => {
           <Button
             size="lg"
             className="w-full animate-fadeIn hover-scale sm:w-auto"
-            onClick={() => setShowDialog(true)}
+            onClick={() => openDialog('regular')}
             disabled={isRequestingAccess}
           >
             <UserPlus className="w-5 h-5 mr-2" />
             Request New Account
+          </Button>
+          <Button
+            size="lg"
+            variant="secondary"
+            className="w-full animate-fadeIn hover-scale sm:w-auto"
+            onClick={() => openDialog('guest')}
+            disabled={isRequestingAccess}
+          >
+            <User className="w-5 h-5 mr-2" />
+            Request Guest Account
           </Button>
           <Button
             size="lg"
@@ -133,6 +152,7 @@ const Index = () => {
           onOpenChange={setShowDialog}
           onSubmit={handleAccessRequest}
           isSubmitting={isRequestingAccess}
+          isGuestRequest={dialogType === 'guest'}
         />
       </div>
     </div>

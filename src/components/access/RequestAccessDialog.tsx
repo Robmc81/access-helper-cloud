@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { UserPlus } from "lucide-react";
+import { UserPlus, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,6 +19,7 @@ type RequestAccessDialogProps = {
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: z.infer<typeof formSchema>) => void;
   isSubmitting: boolean;
+  isGuestRequest?: boolean;
 };
 
 export const RequestAccessDialog = ({
@@ -26,6 +27,7 @@ export const RequestAccessDialog = ({
   onOpenChange,
   onSubmit,
   isSubmitting,
+  isGuestRequest = false,
 }: RequestAccessDialogProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,7 +42,7 @@ export const RequestAccessDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Request Access</DialogTitle>
+          <DialogTitle>{isGuestRequest ? "Request Guest Access" : "Request Access"}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -89,7 +91,11 @@ export const RequestAccessDialog = ({
                   "Submitting..."
                 ) : (
                   <>
-                    <UserPlus className="w-4 h-4 mr-2" />
+                    {isGuestRequest ? (
+                      <User className="w-4 h-4 mr-2" />
+                    ) : (
+                      <UserPlus className="w-4 h-4 mr-2" />
+                    )}
                     Submit Request
                   </>
                 )}
