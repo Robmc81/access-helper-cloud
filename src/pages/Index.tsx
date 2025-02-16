@@ -13,7 +13,7 @@ import * as z from "zod";
 const features = [
   {
     icon: User,
-    title: "Identity Management",
+    title: "Access Request",
     description:
       "Centralized identity store with powerful search capabilities for efficient user management.",
     route: "/dashboard",
