@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User, Lock, Home, Check, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { accessRequests, identityStore } from "./Index";
+import { accessRequests, identityStore } from "@/stores/accessStore";
 import { toast } from "sonner";
 import { useState } from "react";
 

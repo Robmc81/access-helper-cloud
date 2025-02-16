@@ -1,56 +1,32 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, UserPlus, Lock, Users } from "lucide-react";
+import { User, UserPlus, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { RequestAccessDialog } from "@/components/access/RequestAccessDialog";
+import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
+import { accessRequests } from "@/stores/accessStore";
 import * as z from "zod";
 
-const formSchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email"),
-  department: z.string().min(2, "Department must be at least 2 characters"),
-});
-
-// Simple in-memory stores
-export const accessRequests = new Map<string, {
-  fullName: string;
-  email: string;
-  department: string;
-  status: 'pending' | 'approved' | 'rejected';
-  timestamp: Date;
-}>();
-
-export const identityStore = new Map<string, {
-  fullName: string;
-  email: string;
-  department: string;
-  createdAt: Date;
-}>();
+const features = [
+  {
+    icon: User,
+    title: "Identity Management",
+    description:
+      "Centralized identity store with powerful search capabilities for efficient user management.",
+    route: "/dashboard",
+  },
+];
 
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const navigate = useNavigate();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      department: "",
-    },
-  });
-
   const handleAccessRequest = async (values: z.infer<typeof formSchema>) => {
     setIsRequestingAccess(true);
-    // Store the request in our simple datastore with proper typing
     const requestId = crypto.randomUUID();
     const requestData = {
       fullName: values.fullName,
@@ -106,48 +82,7 @@ const Index = () => {
         </div>
 
         <div className="mt-24 space-y-8">
-          <Card className="p-6 glass-card">
-            <h2 className="flex items-center mb-4 text-xl font-semibold">
-              <Users className="w-5 h-5 mr-2 text-success" />
-              Identity Store
-            </h2>
-            <div className="overflow-hidden rounded-lg border bg-white">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Name</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Department</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Added</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {Array.from(identityStore.values()).map((identity) => (
-                    <tr key={identity.email} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div>
-                          <div className="font-medium text-gray-900">{identity.fullName}</div>
-                          <div className="text-sm text-gray-500">{identity.email}</div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {identity.department}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {identity.createdAt.toLocaleDateString()}
-                      </td>
-                    </tr>
-                  ))}
-                  {Array.from(identityStore.values()).length === 0 && (
-                    <tr>
-                      <td colSpan={3} className="px-4 py-3 text-sm text-gray-500 text-center">
-                        No approved identities yet
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+          <IdentityStoreTable />
 
           {features.map((feature, index) => (
             <Card
@@ -165,81 +100,15 @@ const Index = () => {
           ))}
         </div>
 
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Request Access</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleAccessRequest)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="john@example.com" type="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="department"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Department</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Engineering" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <DialogFooter>
-                  <Button type="submit" disabled={isRequestingAccess}>
-                    {isRequestingAccess ? (
-                      "Submitting..."
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Submit Request
-                      </>
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <RequestAccessDialog
+          open={showDialog}
+          onOpenChange={setShowDialog}
+          onSubmit={handleAccessRequest}
+          isSubmitting={isRequestingAccess}
+        />
       </div>
     </div>
   );
 };
-
-const features = [
-  {
-    icon: User,
-    title: "Identity Management",
-    description:
-      "Centralized identity store with powerful search capabilities for efficient user management.",
-    route: "/dashboard",
-  },
-];
 
 export default Index;
