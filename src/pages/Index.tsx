@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { User, UserPlus, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { RequestAccessDialog } from "@/components/access/RequestAccessDialog";
+import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
 import { accessRequests } from "@/stores/accessStore";
 import * as z from "zod";
