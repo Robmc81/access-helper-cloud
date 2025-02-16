@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BackupRestore } from "@/components/admin/BackupRestore";
+import { ConnectorSettings } from "@/components/admin/ConnectorSettings";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -23,8 +25,8 @@ const Admin = () => {
         </div>
 
         <div className="space-y-6">
+          <ConnectorSettings />
           <BackupRestore />
-          {/* Add more admin components here */}
         </div>
       </div>
     </div>
