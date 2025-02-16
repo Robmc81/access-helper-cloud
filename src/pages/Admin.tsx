@@ -6,7 +6,6 @@ import { BackupRestore } from "@/components/admin/BackupRestore";
 import { ConnectorSettings } from "@/components/admin/ConnectorSettings";
 import { LogsCard } from "@/components/admin/LogsCard";
 import { LogicAppsTile } from "@/components/admin/LogicAppsTile";
-import { Card } from "@/components/ui/card";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -25,26 +24,18 @@ const Admin = () => {
 
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">Admin Settings</h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover-scale flex items-center gap-2"
+            onClick={() => navigate("/identities")}
+          >
+            <Users className="w-4 h-4" />
+            Identity Store
+          </Button>
         </div>
 
         <div className="space-y-6">
-          <Card className="p-6">
-            <h2 className="flex items-center mb-4 text-xl font-semibold">
-              <Users className="w-5 h-5 mr-2 text-success" />
-              Identity Management
-            </h2>
-            <Button 
-              variant="outline" 
-              className="hover-scale w-full h-24"
-              onClick={() => navigate("/identities")}
-            >
-              <div className="text-center">
-                <h3 className="font-medium">Identity Store</h3>
-                <p className="text-sm text-gray-600">View and manage user identities</p>
-              </div>
-            </Button>
-          </Card>
-          
           <LogicAppsTile />
           <ConnectorSettings />
           <LogsCard />
