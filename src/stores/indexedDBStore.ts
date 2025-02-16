@@ -349,7 +349,15 @@ export const getOpenLDAPConfig = async (): Promise<OpenLDAPConfig | null> => {
   try {
     const tx = db.transaction('systemConfig', 'readonly');
     const store = tx.objectStore('systemConfig');
-    return await store.get('openldap');
+    const config = await store.get('openldap');
+    return config || {
+      enabled: false,
+      url: '',
+      bindDN: '',
+      bindPassword: '',
+      baseDN: '',
+      userContainer: '',
+    };
   } catch (error) {
     console.error('Error getting OpenLDAP config:', error);
     return null;
@@ -358,9 +366,24 @@ export const getOpenLDAPConfig = async (): Promise<OpenLDAPConfig | null> => {
 
 export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
   try {
+    // Validate required fields
+    if (!config.url || !config.bindDN || !config.bindPassword || !config.baseDN || !config.userContainer) {
+      throw new Error('All fields are required');
+    }
+
     const tx = db.transaction('systemConfig', 'readwrite');
     const store = tx.objectStore('systemConfig');
-    await store.put(config, 'openldap');
+    
+    // Save the complete config object
+    await store.put({
+      enabled: config.enabled,
+      url: config.url,
+      bindDN: config.bindDN,
+      bindPassword: config.bindPassword,
+      baseDN: config.baseDN,
+      userContainer: config.userContainer,
+    }, 'openldap');
+    
     await tx.done;
     await addLog('INFO', 'OpenLDAP configuration updated', { config: { ...config, bindPassword: '***' } });
     toast.success('OpenLDAP configuration saved successfully');
