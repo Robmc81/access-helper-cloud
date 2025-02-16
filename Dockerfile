@@ -7,8 +7,10 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with legacy peer deps flag
-RUN npm install --legacy-peer-deps
+# Remove existing date-fns and install compatible version
+RUN npm uninstall date-fns && \
+    npm install date-fns@3.6.0 --legacy-peer-deps && \
+    npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
