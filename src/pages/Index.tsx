@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,6 +18,15 @@ const formSchema = z.object({
   department: z.string().min(2, "Department must be at least 2 characters"),
 });
 
+// Simple in-memory store for access requests
+export const accessRequests = new Map<string, {
+  fullName: string;
+  email: string;
+  department: string;
+  status: 'pending' | 'approved' | 'rejected';
+  timestamp: Date;
+}>();
+
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
@@ -35,15 +43,29 @@ const Index = () => {
 
   const handleAccessRequest = async (values: z.infer<typeof formSchema>) => {
     setIsRequestingAccess(true);
-    // Simulate API call
+    // Store the request in our simple datastore
+    const requestId = crypto.randomUUID();
+    accessRequests.set(requestId, {
+      ...values,
+      status: 'pending',
+      timestamp: new Date(),
+    });
+    
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
-    toast.success("Access request submitted successfully!");
+    toast.success("Access request submitted successfully! Awaiting approval.");
     setShowDialog(false);
+    console.log("Current access requests:", Array.from(accessRequests.entries()));
     
     setTimeout(() => {
       setIsRequestingAccess(false);
-      navigate("/dashboard");
+      navigate("/dashboard", { 
+        state: { 
+          requestId,
+          email: values.email,
+          status: 'pending'
+        } 
+      });
     }, 1000);
   };
 
