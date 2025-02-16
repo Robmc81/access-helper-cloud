@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, UserPlus, Lock } from "lucide-react";
+import { User, UserPlus, Lock, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
@@ -17,6 +17,13 @@ const features = [
     description:
       "Centralized identity store with powerful search capabilities for efficient user management.",
     route: "/dashboard",
+  },
+  {
+    icon: Users,
+    title: "Identity Store",
+    description:
+      "View and manage all approved identities in the system.",
+    route: "/identities",
   },
 ];
 
@@ -82,8 +89,6 @@ const Index = () => {
         </div>
 
         <div className="mt-24 space-y-8">
-          <IdentityStoreTable />
-
           {features.map((feature, index) => (
             <Card
               key={feature.title}
