@@ -1,23 +1,35 @@
 
-# Development stage
-FROM node:20-alpine
+# Build stage
+FROM node:20-alpine as builder
 
 WORKDIR /app
 
-# Install npm version 10.8.2 globally (this is the latest LTS version)
+# Install npm version 10.8.2 globally
 RUN npm install -g npm@10.8.2
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with legacy peer deps to handle version conflicts
+# Install dependencies with legacy peer deps
 RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
 
-# Expose port for development
-EXPOSE 5173
+# Build the application
+RUN npm run build
 
-# Start development server
-CMD ["npm", "run", "dev", "--", "--host"]
+# Production stage
+FROM nginx:alpine
+
+# Copy the build output from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

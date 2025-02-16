@@ -8,3 +8,5 @@ dist
 *.log
 npm-debug.log*
 README.md
+.DS_Store
+coverage
