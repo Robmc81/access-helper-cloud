@@ -28,7 +28,6 @@ export const LogicAppsConfig = () => {
   const [workflowUrl, setWorkflowUrl] = useState("");
   const [db, setDb] = useState<IDBDatabase | null>(null);
 
-  // Initialize database and load workflow URL
   useEffect(() => {
     let isMounted = true;
     
@@ -93,42 +92,67 @@ export const LogicAppsConfig = () => {
     }
   };
 
-  const saveWorkflowUrl = async (url: string): Promise<boolean> => {
-    if (!db) {
-      toast.error("Database not initialized");
-      return false;
-    }
+  const saveWorkflowUrl = (url: string): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+      if (!db) {
+        toast.error("Database not initialized");
+        reject(new Error("Database not initialized"));
+        return;
+      }
 
-    return new Promise((resolve) => {
       try {
         const transaction = db.transaction('systemConfig', 'readwrite');
         const store = transaction.objectStore('systemConfig');
-        const request = store.put(url, 'workflowUrl');
+        
+        // Set up transaction handlers
+        transaction.oncomplete = () => {
+          console.log("Transaction completed successfully");
+          resolve(true);
+        };
+        
+        transaction.onerror = () => {
+          console.error("Transaction failed:", transaction.error);
+          reject(transaction.error);
+        };
 
+        // Perform the put operation
+        const request = store.put(url, 'workflowUrl');
+        
         request.onsuccess = async () => {
+          console.log("Put operation successful");
           await addLog("INFO", "Logic Apps workflow URL updated", { url });
           toast.success("Workflow URL saved successfully");
-          resolve(true);
         };
 
         request.onerror = async () => {
+          console.error("Put operation failed:", request.error);
           await addLog("ERROR", "Failed to save workflow URL", { error: request.error });
           toast.error("Failed to save workflow URL");
-          resolve(false);
-        };
-
-        transaction.oncomplete = () => {
-          resolve(true);
-        };
-
-        transaction.onerror = () => {
-          resolve(false);
+          reject(request.error);
         };
       } catch (error) {
-        console.error("Error saving workflow URL:", error);
-        resolve(false);
+        console.error("Error in saveWorkflowUrl:", error);
+        reject(error);
       }
     });
+  };
+
+  const handleSaveEndpoint = async () => {
+    if (!workflowUrl) {
+      toast.error("Workflow URL cannot be empty");
+      return;
+    }
+
+    try {
+      new URL(workflowUrl); // Validate URL format
+      const result = await saveWorkflowUrl(workflowUrl);
+      if (result) {
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error("Error saving workflow URL:", error);
+      toast.error("Failed to save workflow URL");
+    }
   };
 
   const testWorkflow = async () => {
@@ -176,22 +200,6 @@ export const LogicAppsConfig = () => {
       toast.error("Failed to test Logic Apps workflow");
     } finally {
       setTesting(false);
-    }
-  };
-
-  const handleSaveEndpoint = async () => {
-    if (!workflowUrl) {
-      toast.error("Workflow URL cannot be empty");
-      return;
-    }
-    try {
-      new URL(workflowUrl); // Validate URL format
-      const saved = await saveWorkflowUrl(workflowUrl);
-      if (saved) {
-        setIsEditing(false);
-      }
-    } catch (e) {
-      toast.error("Please enter a valid workflow URL");
     }
   };
 
