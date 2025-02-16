@@ -10,8 +10,9 @@ RUN npm install -g npm@10.8.2
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Clear npm cache and install dependencies
+RUN npm cache clean --force && \
+    npm ci
 
 # Copy source code
 COPY . .
