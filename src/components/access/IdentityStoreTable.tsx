@@ -1,9 +1,28 @@
 
 import { Card } from "@/components/ui/card";
 import { Users } from "lucide-react";
-import { identityStore } from "@/stores/accessStore";
+import { useEffect, useState } from "react";
+import { getAllFromIndexedDB } from "@/stores/indexedDBStore";
+
+interface Identity {
+  email: string;
+  fullName: string;
+  department: string;
+  createdAt: Date;
+}
 
 export const IdentityStoreTable = () => {
+  const [identities, setIdentities] = useState<Identity[]>([]);
+
+  useEffect(() => {
+    const loadIdentities = async () => {
+      const data = await getAllFromIndexedDB('identityStore');
+      setIdentities(data);
+    };
+
+    loadIdentities();
+  }, []);
+
   return (
     <Card className="p-6 glass-card">
       <h2 className="flex items-center mb-4 text-xl font-semibold">
@@ -20,7 +39,7 @@ export const IdentityStoreTable = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {Array.from(identityStore.values()).map((identity) => (
+            {identities.map((identity) => (
               <tr key={identity.email} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <div>
@@ -32,11 +51,11 @@ export const IdentityStoreTable = () => {
                   {identity.department}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-500">
-                  {identity.createdAt.toLocaleDateString()}
+                  {new Date(identity.createdAt).toLocaleDateString()}
                 </td>
               </tr>
             ))}
-            {Array.from(identityStore.values()).length === 0 && (
+            {identities.length === 0 && (
               <tr>
                 <td colSpan={3} className="px-4 py-3 text-sm text-gray-500 text-center">
                   No approved identities yet
