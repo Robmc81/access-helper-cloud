@@ -4,21 +4,21 @@ FROM node:20-alpine as builder
 
 WORKDIR /app
 
-# Install npm version 10.8.2 globally
-RUN npm install -g npm@10.8.2
+# Install Yarn
+RUN corepack enable && \
+    corepack prepare yarn@stable --activate
 
 # Copy package files
-COPY package*.json ./
+COPY package*.json yarn.lock ./
 
-# Clear npm cache and install dependencies
-RUN npm cache clean --force && \
-    npm ci
+# Install dependencies using Yarn
+RUN yarn install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN yarn build
 
 # Production stage
 FROM nginx:alpine
