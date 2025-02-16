@@ -366,27 +366,38 @@ export const getOpenLDAPConfig = async (): Promise<OpenLDAPConfig | null> => {
 
 export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
   try {
+    console.log('Attempting to save OpenLDAP config:', { ...config, bindPassword: '***' });
+    
     // Validate required fields
     if (!config.url || !config.bindDN || !config.bindPassword || !config.baseDN || !config.userContainer) {
+      console.error('Validation failed: Missing required fields');
       throw new Error('All fields are required');
     }
 
+    console.log('Starting IndexedDB transaction');
     const tx = db.transaction('systemConfig', 'readwrite');
     const store = tx.objectStore('systemConfig');
     
     // Save the complete config object
-    await store.put({
+    const configToSave = {
       enabled: config.enabled,
       url: config.url,
       bindDN: config.bindDN,
       bindPassword: config.bindPassword,
       baseDN: config.baseDN,
       userContainer: config.userContainer,
-    }, 'openldap');
+    };
+    console.log('Saving config to IndexedDB:', { ...configToSave, bindPassword: '***' });
+    
+    await store.put(configToSave, 'openldap');
+    console.log('Config saved to store');
     
     await tx.done;
+    console.log('Transaction completed');
+    
     await addLog('INFO', 'OpenLDAP configuration updated', { config: { ...config, bindPassword: '***' } });
     toast.success('OpenLDAP configuration saved successfully');
+    console.log('Save operation completed successfully');
   } catch (error) {
     console.error('Error saving OpenLDAP config:', error);
     await addLog('ERROR', 'Failed to save OpenLDAP configuration', { error: error.message });
