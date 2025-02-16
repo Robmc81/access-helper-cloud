@@ -46,6 +46,9 @@ export const accessRequests = loadStoredData<{
   status: 'pending' | 'approved' | 'rejected';
   timestamp: Date;
   approvedAt?: Date;
+  type: 'regular' | 'guest' | 'group';
+  groupId?: string;
+  groupName?: string;
 }>('accessRequests');
 
 export const identityStore = loadStoredData<{

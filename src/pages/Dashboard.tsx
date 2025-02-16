@@ -1,7 +1,6 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Lock, Home, Check, X } from "lucide-react";
+import { User, Lock, Home, Check, X, Group } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { accessRequests, identityStore } from "@/stores/accessStore";
 import { saveToIndexedDB, provisionIdentity } from "@/stores/indexedDBStore";
@@ -26,18 +25,15 @@ const Dashboard = () => {
       const request = accessRequests.get(id)!;
       const newStatus: RequestStatus = approved ? 'approved' : 'rejected';
       
-      // Create new request object with updated status
       const updatedRequest = {
         ...request,
         status: newStatus,
         approvedAt: new Date()
       };
       
-      // Update access request in both stores
       accessRequests.set(id, updatedRequest);
       await saveToIndexedDB('accessRequests', updatedRequest);
       
-      // If approved, add to identity store using provisionIdentity
       if (approved) {
         await provisionIdentity({
           email: request.email,
@@ -51,7 +47,6 @@ const Dashboard = () => {
         toast.success("Access request rejected successfully");
       }
 
-      // Force a re-render
       setRefreshKey(prev => prev + 1);
       
     } catch (error) {
@@ -60,7 +55,6 @@ const Dashboard = () => {
     }
   };
 
-  // Get all pending requests
   const pendingRequests = Array.from(accessRequests.entries())
     .filter(([_, request]) => request.status === 'pending')
     .sort((a, b) => {
@@ -69,7 +63,6 @@ const Dashboard = () => {
       return timeA - timeB;
     });
 
-  // Get all processed requests (approved or rejected)
   const processedRequests = Array.from(accessRequests.entries())
     .filter(([_, request]) => request.status === 'approved' || request.status === 'rejected')
     .sort((a, b) => {
@@ -99,7 +92,6 @@ const Dashboard = () => {
         </div>
         
         <div className="grid gap-6 mb-8">
-          {/* Pending Requests Section */}
           <Card className="p-6 glass-card">
             <h2 className="flex items-center mb-4 text-xl font-semibold">
               <Lock className="w-5 h-5 mr-2 text-success" />
@@ -110,9 +102,20 @@ const Dashboard = () => {
                 {pendingRequests.map(([reqId, request]) => (
                   <div key={reqId} className="p-4 border rounded-lg">
                     <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        {request.type === 'group' ? (
+                          <Group className="w-4 h-4 text-primary" />
+                        ) : (
+                          <User className="w-4 h-4 text-primary" />
+                        )}
+                        <span className="font-medium capitalize">{request.type} Access Request</span>
+                      </div>
                       <p className="text-gray-600">Name: {request.fullName}</p>
                       <p className="text-gray-600">Email: {request.email}</p>
                       <p className="text-gray-600">Department: {request.department}</p>
+                      {request.type === 'group' && (
+                        <p className="text-gray-600">Group: {request.groupName}</p>
+                      )}
                       <p className="text-gray-600">
                         Submitted: {new Date(request.timestamp).toLocaleDateString()}
                       </p>
@@ -143,7 +146,6 @@ const Dashboard = () => {
             )}
           </Card>
 
-          {/* Access Request History Section */}
           <Card className="p-6 glass-card">
             <h2 className="flex items-center mb-4 text-xl font-semibold">
               <Lock className="w-5 h-5 mr-2 text-success" />
@@ -154,9 +156,20 @@ const Dashboard = () => {
                 {processedRequests.map(([reqId, request]) => (
                   <div key={reqId} className="p-4 border rounded-lg">
                     <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        {request.type === 'group' ? (
+                          <Group className="w-4 h-4 text-primary" />
+                        ) : (
+                          <User className="w-4 h-4 text-primary" />
+                        )}
+                        <span className="font-medium capitalize">{request.type} Access Request</span>
+                      </div>
                       <p className="text-gray-600">Name: {request.fullName}</p>
                       <p className="text-gray-600">Email: {request.email}</p>
                       <p className="text-gray-600">Department: {request.department}</p>
+                      {request.type === 'group' && (
+                        <p className="text-gray-600">Group: {request.groupName}</p>
+                      )}
                       <p className="text-gray-600">
                         Status: <span className={`font-semibold capitalize ${
                           request.status === 'approved' ? 'text-green-600' : 'text-red-600'

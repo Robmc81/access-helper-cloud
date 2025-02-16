@@ -74,8 +74,29 @@ const Index = () => {
   const handleGroupRequest = (groupId: string) => {
     const group = groups.get(groupId);
     if (group) {
-      toast.success(`Request submitted for ${group.name} group access`);
-      setSheetOpen(false);
+      const requestId = crypto.randomUUID();
+      const requestData = {
+        id: requestId,
+        fullName: "Current User",
+        email: "user@example.com",
+        department: "Unknown",
+        status: 'pending' as const,
+        timestamp: new Date(),
+        type: 'group' as const,
+        groupId: groupId,
+        groupName: group.name
+      };
+      
+      try {
+        accessRequests.set(requestId, requestData);
+        saveToIndexedDB('accessRequests', requestData);
+        setPendingCount(prev => prev + 1);
+        toast.success(`Request submitted for ${group.name} group access`);
+        setSheetOpen(false);
+      } catch (error) {
+        console.error('Error saving group access request:', error);
+        toast.error('Failed to save group access request');
+      }
     }
   };
 
