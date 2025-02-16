@@ -7,6 +7,7 @@ import { accessRequests, identityStore } from "@/stores/accessStore";
 import { saveToIndexedDB, provisionIdentity } from "@/stores/indexedDBStore";
 import { toast } from "sonner";
 import { useState } from "react";
+import { groups } from "@/stores/groupStore";
 
 type RequestStatus = 'pending' | 'approved' | 'rejected';
 
@@ -37,7 +38,7 @@ const Dashboard = () => {
       
       if (approved) {
         // For group requests, we don't create a new identity if one already exists
-        if (request.type === 'group') {
+        if (request.type === 'group' && request.groupId) {
           // Only create identity if it doesn't exist
           const existingIdentity = Array.from(identityStore.values()).find(
             identity => identity.email === request.email
@@ -50,6 +51,21 @@ const Dashboard = () => {
               department: request.department,
               source: 'group_request'
             });
+          }
+
+          // Add user to the group
+          const group = groups.get(request.groupId);
+          if (group) {
+            if (!group.members.includes(request.email)) {
+              group.members.push(request.email);
+              groups.set(request.groupId, group);
+              await saveToIndexedDB('groups', group);
+              console.log(`Added ${request.email} to group ${group.name}`);
+            }
+          } else {
+            console.error(`Group ${request.groupId} not found`);
+            toast.error("Group not found");
+            return;
           }
         } else {
           await provisionIdentity({
