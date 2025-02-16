@@ -5,22 +5,46 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { User, UserPlus, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const formSchema = z.object({
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email"),
+  department: z.string().min(2, "Department must be at least 2 characters"),
+});
 
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const navigate = useNavigate();
 
-  const handleAccessRequest = () => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      department: "",
+    },
+  });
+
+  const handleAccessRequest = async (values: z.infer<typeof formSchema>) => {
     setIsRequestingAccess(true);
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
     toast.success("Access request submitted successfully!");
+    setShowDialog(false);
+    
     setTimeout(() => {
       setIsRequestingAccess(false);
       navigate("/dashboard");
-    }, 2000);
-  };
-
-  const handleTileClick = (route: string) => {
-    navigate(route);
+    }, 1000);
   };
 
   return (
@@ -41,17 +65,11 @@ const Index = () => {
           <Button
             size="lg"
             className="animate-fadeIn hover-scale"
-            onClick={handleAccessRequest}
+            onClick={() => setShowDialog(true)}
             disabled={isRequestingAccess}
           >
-            {isRequestingAccess ? (
-              "Submitting..."
-            ) : (
-              <>
-                <UserPlus className="w-5 h-5 mr-2" />
-                Request Access
-              </>
-            )}
+            <UserPlus className="w-5 h-5 mr-2" />
+            Request Access
           </Button>
         </div>
 
@@ -63,7 +81,7 @@ const Index = () => {
               style={{
                 animationDelay: `${index * 100}ms`,
               }}
-              onClick={() => handleTileClick(feature.route)}
+              onClick={() => navigate(feature.route)}
             >
               <feature.icon className="w-12 h-12 p-2 mb-4 text-success bg-success/10 rounded-lg" />
               <h3 className="mb-2 text-xl font-semibold">{feature.title}</h3>
@@ -71,6 +89,69 @@ const Index = () => {
             </Card>
           ))}
         </div>
+
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Request Access</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleAccessRequest)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="john@example.com" type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="department"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Engineering" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="submit" disabled={isRequestingAccess}>
+                    {isRequestingAccess ? (
+                      "Submitting..."
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Submit Request
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
