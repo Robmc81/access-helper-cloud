@@ -30,12 +30,15 @@ export const LogicAppsConfig = () => {
   const [loading, setLoading] = useState(true);
   const [db, setDb] = useState<IDBPDatabase | null>(null);
 
-  // Initialize database and load configuration
   useEffect(() => {
+    let mounted = true;
+
     const initializeDB = async () => {
       try {
+        console.log('Initializing database...');
         const database = await openDB(DB_NAME, DB_VERSION, {
           upgrade(db) {
+            console.log('Upgrading database...');
             if (!db.objectStoreNames.contains('systemConfig')) {
               db.createObjectStore('systemConfig');
             }
@@ -45,33 +48,54 @@ export const LogicAppsConfig = () => {
           },
         });
 
+        if (!mounted) {
+          database.close();
+          return;
+        }
+
+        console.log('Database initialized successfully');
         setDb(database);
+        
+        // Load configuration after database is initialized
+        console.log('Loading configuration...');
         await loadConfiguration(database);
-        setLoading(false);
+        
+        if (mounted) {
+          setLoading(false);
+          console.log('Component loading complete');
+        }
       } catch (error) {
         console.error('Failed to initialize database:', error);
-        await addLog('ERROR', 'Database initialization failed', { error: String(error) });
-        toast.error('Failed to initialize database');
-        setLoading(false);
+        if (mounted) {
+          await addLog('ERROR', 'Database initialization failed', { error: String(error) });
+          toast.error('Failed to initialize database');
+          setLoading(false);
+        }
       }
     };
 
     initializeDB();
 
+    // Cleanup function
     return () => {
+      mounted = false;
       if (db) {
+        console.log('Closing database connection');
         db.close();
       }
     };
-  }, []);
+  }, []); // Empty dependency array since we only want to run this once
 
-  // Load existing configuration
   const loadConfiguration = async (database: IDBPDatabase) => {
     try {
+      console.log('Fetching workflow URL from database...');
       const url = await database.get('systemConfig', 'workflowUrl');
       if (url) {
+        console.log('Workflow URL found:', url);
         setWorkflowUrl(url);
         await addLog('INFO', 'Loaded existing workflow URL configuration');
+      } else {
+        console.log('No workflow URL found in database');
       }
     } catch (error) {
       console.error('Error loading configuration:', error);
@@ -176,6 +200,7 @@ export const LogicAppsConfig = () => {
   };
 
   if (loading) {
+    console.log('Rendering loading state');
     return (
       <Card className="mb-6">
         <CardContent className="py-6">
@@ -187,6 +212,7 @@ export const LogicAppsConfig = () => {
     );
   }
 
+  console.log('Rendering main component');
   return (
     <Card className="mb-6">
       <CardHeader>
