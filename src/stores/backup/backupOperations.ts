@@ -1,5 +1,5 @@
 
-import { getAllFromIndexedDB } from '../db/dbConfig';
+import { db, saveToIndexedDB, getAllFromIndexedDB } from '../db/dbConfig';
 import { getLogs } from '../logging/systemLogs';
 import { toast } from "sonner";
 

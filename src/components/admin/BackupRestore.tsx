@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Database, Upload, FolderOpen } from "lucide-react";
-import { exportData, importData, scheduleAutoBackup } from "@/stores/indexedDBStore";
+import { exportData, importData } from "@/stores/indexedDBStore";
 import { useRef } from "react";
 
 export const BackupRestore = () => {
@@ -34,14 +34,6 @@ export const BackupRestore = () => {
             <Upload className="w-4 h-4 mr-2" />
             Import Backup
           </Button>
-          <Button
-            onClick={() => scheduleAutoBackup()}
-            className="w-full sm:w-auto"
-            variant="outline"
-          >
-            <FolderOpen className="w-4 h-4 mr-2" />
-            Set Auto-Backup Location
-          </Button>
           <input
             type="file"
             ref={fileInputRef}
@@ -51,7 +43,7 @@ export const BackupRestore = () => {
           />
         </div>
         <p className="text-sm text-gray-500 mt-4">
-          Use the File System Access API to securely backup and restore your data. Auto-backup will create regular backups in your chosen directory.
+          Use the File System Access API to securely backup and restore your data.
         </p>
       </div>
     </Card>
