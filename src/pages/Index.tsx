@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, UserPlus, Users, Clock, AppWindow, Group } from "lucide-react";
+import { User, UserPlus, Users, Clock, AppWindow, Group, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
@@ -31,6 +30,13 @@ const features = [
     description:
       "Centralized identity store with powerful search capabilities for efficient user management.",
     route: "/identities",
+  },
+  {
+    icon: Shield,
+    title: "Admin Portal",
+    description:
+      "Advanced configurations for identity synchronization and system settings.",
+    route: "/admin",
   },
 ];
 
