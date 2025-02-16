@@ -2,6 +2,16 @@
 import { openDB } from 'idb';
 import { toast } from "sonner";
 
+declare global {
+  interface Window {
+    showSaveFilePicker: (options: { 
+      suggestedName: string; 
+      types: Array<{ description: string; accept: Record<string, string[]> }> 
+    }) => Promise<FileSystemFileHandle>;
+    showDirectoryPicker: () => Promise<FileSystemDirectoryHandle>;
+  }
+}
+
 const DB_NAME = 'ocgDDIL';
 const DB_VERSION = 1;
 
@@ -47,14 +57,15 @@ export const exportData = async () => {
   try {
     const accessRequests = await getAllFromIndexedDB('accessRequests');
     const identityStore = await getAllFromIndexedDB('identityStore');
+    const syncStore = await getAllFromIndexedDB('syncStore');
     
     const exportData = {
       accessRequests,
       identityStore,
+      syncStore,
       exportDate: new Date().toISOString(),
     };
     
-    // Try to use File System Access API if available
     if ('showSaveFilePicker' in window) {
       try {
         const handle = await window.showSaveFilePicker({
@@ -76,7 +87,6 @@ export const exportData = async () => {
       }
     }
     
-    // Fallback to traditional download
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -99,19 +109,22 @@ export const importData = async (file: File) => {
     const text = await file.text();
     const data = JSON.parse(text);
     
-    // Validate data structure
     if (!data.accessRequests || !data.identityStore) {
       throw new Error('Invalid backup file format');
     }
     
-    // Import access requests
     for (const request of data.accessRequests) {
       await saveToIndexedDB('accessRequests', request);
     }
     
-    // Import identity store
     for (const identity of data.identityStore) {
       await saveToIndexedDB('identityStore', identity);
+    }
+
+    if (data.syncStore) {
+      for (const syncItem of data.syncStore) {
+        await saveToIndexedDB('syncStore', syncItem);
+      }
     }
     
     toast.success('Data imported successfully');
@@ -121,20 +134,18 @@ export const importData = async (file: File) => {
   }
 };
 
-// Add auto-backup functionality
 export const scheduleAutoBackup = async () => {
   try {
     if ('showDirectoryPicker' in window) {
       const dirHandle = await window.showDirectoryPicker();
       localStorage.setItem('autoBackupEnabled', 'true');
       
-      // Store the directory handle
       const grantPermission = await dirHandle.requestPermission({ mode: 'readwrite' });
       if (grantPermission === 'granted') {
-        // Create auto-backup
         const backupData = {
           accessRequests: await getAllFromIndexedDB('accessRequests'),
           identityStore: await getAllFromIndexedDB('identityStore'),
+          syncStore: await getAllFromIndexedDB('syncStore'),
           exportDate: new Date().toISOString(),
         };
         
@@ -153,4 +164,90 @@ export const scheduleAutoBackup = async () => {
     console.error('Auto-backup error:', error);
     toast.error('Failed to set up auto-backup');
   }
+};
+
+// Sync functionality
+export interface SyncRecord {
+  id: string;
+  type: 'accessRequest' | 'identity';
+  action: 'create' | 'update' | 'delete';
+  data: any;
+  timestamp: string;
+  status: 'pending' | 'synced';
+}
+
+export const createSyncRecord = async (
+  type: SyncRecord['type'],
+  action: SyncRecord['action'],
+  data: any
+) => {
+  const syncRecord: SyncRecord = {
+    id: crypto.randomUUID(),
+    type,
+    action,
+    data,
+    timestamp: new Date().toISOString(),
+    status: 'pending'
+  };
+  
+  await saveToIndexedDB('syncStore', syncRecord);
+  return syncRecord;
+};
+
+export const getPendingSyncRecords = async (): Promise<SyncRecord[]> => {
+  const allRecords = await getAllFromIndexedDB('syncStore');
+  return allRecords.filter((record: SyncRecord) => record.status === 'pending');
+};
+
+export const markAsSynced = async (id: string) => {
+  const tx = db.transaction('syncStore', 'readwrite');
+  const store = tx.objectStore('syncStore');
+  const record = await store.get(id);
+  
+  if (record) {
+    record.status = 'synced';
+    await store.put(record);
+  }
+  
+  await tx.done;
+};
+
+// Function to apply sync records from another device
+export const applySyncRecords = async (records: SyncRecord[]) => {
+  const sortedRecords = records.sort((a, b) => 
+    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+
+  for (const record of sortedRecords) {
+    try {
+      switch (record.type) {
+        case 'accessRequest':
+          await saveToIndexedDB('accessRequests', record.data);
+          break;
+        case 'identity':
+          await saveToIndexedDB('identityStore', record.data);
+          break;
+      }
+      await markAsSynced(record.id);
+    } catch (error) {
+      console.error('Error applying sync record:', error);
+    }
+  }
+};
+
+// Function to merge sync data from another device
+export const mergeSyncData = async (importedData: any) => {
+  if (!importedData.syncStore) return;
+
+  const currentRecords = await getAllFromIndexedDB('syncStore');
+  const importedRecords = importedData.syncStore;
+  
+  // Create a map of existing record IDs for quick lookup
+  const existingIds = new Set(currentRecords.map((r: SyncRecord) => r.id));
+  
+  // Filter out records we already have
+  const newRecords = importedRecords.filter((r: SyncRecord) => !existingIds.has(r.id));
+  
+  // Apply new records
+  await applySyncRecords(newRecords);
 };
