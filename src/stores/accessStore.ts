@@ -38,8 +38,8 @@ const saveData = (key: string, data: Map<any, any>) => {
   }
 };
 
-// Initialize stores with data from localStorage
-export const accessRequests = loadStoredData<{
+export interface AccessRequest {
+  id: string;
   fullName: string;
   email: string;
   department: string;
@@ -49,15 +49,19 @@ export const accessRequests = loadStoredData<{
   type: 'regular' | 'guest' | 'group';
   groupId?: string;
   groupName?: string;
-}>('accessRequests');
+}
 
-export const identityStore = loadStoredData<{
+export interface Identity {
   fullName: string;
   email: string;
   department: string;
   createdAt: Date;
-  requestId: string;
-}>('identityStore');
+  source?: string;
+}
+
+// Initialize stores with data from localStorage
+export const accessRequests = loadStoredData<AccessRequest>('accessRequests');
+export const identityStore = loadStoredData<Identity>('identityStore');
 
 // Wrap Map.prototype.set to automatically save changes
 const originalAccessRequestSet = accessRequests.set.bind(accessRequests);
