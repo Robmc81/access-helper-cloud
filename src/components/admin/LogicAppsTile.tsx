@@ -60,21 +60,24 @@ export const LogicAppsTile = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log('Received data:', data);
+      const responseData = await response.json();
+      console.log('Received data:', responseData);
       
-      // Validate the response data
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response format: expected an array of users');
-      }
-
-      // Process each user in the response
-      for (const user of data) {
+      // Convert single user object to array or use array as is
+      const users = Array.isArray(responseData) ? responseData : [responseData];
+      
+      // Filter out the message field if it exists and process users
+      const processedUsers = users.filter(user => {
+        // Check if the object has required user fields
         if (!user.email || !user.fullName || !user.department) {
           console.warn('Skipping invalid user data:', user);
-          continue;
+          return false;
         }
+        return true;
+      });
 
+      // Process each user
+      for (const user of processedUsers) {
         await provisionIdentity({
           email: user.email,
           fullName: user.fullName,
@@ -83,9 +86,9 @@ export const LogicAppsTile = () => {
         });
       }
 
-      toast.success(`Successfully processed ${data.length} users`);
+      toast.success(`Successfully processed ${processedUsers.length} users`);
       try {
-        await addLog('INFO', 'Logic App workflow processed successfully', { userCount: data.length });
+        await addLog('INFO', 'Logic App workflow processed successfully', { userCount: processedUsers.length });
       } catch (error) {
         console.error('Failed to log success:', error);
       }
