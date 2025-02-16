@@ -27,13 +27,13 @@ export const ConnectorSettings = () => {
     );
     
     setSyncingId(null);
-    toast.success("Connector synchronized successfully");
+    toast.success("Identity orchestration synchronized successfully");
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Connector Settings</h2>
+        <h2 className="text-2xl font-semibold">IDP Settings</h2>
       </div>
       
       <div className="space-y-4">
