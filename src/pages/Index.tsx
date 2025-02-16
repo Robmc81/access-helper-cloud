@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, UserPlus, Users, Clock, AppWindow, Group, Settings } from "lucide-react";
+import { User, UserPlus, Users, Clock, AppWindow, Group, Settings, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
@@ -12,11 +11,14 @@ import { saveToIndexedDB } from "@/stores/indexedDBStore";
 import * as z from "zod";
 import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { groups } from "@/stores/groupStore";
 
 const Index = () => {
@@ -24,10 +26,11 @@ const Index = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [dialogType, setDialogType] = useState<'regular' | 'guest'>('regular');
   const [pendingCount, setPendingCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Count pending requests
     const count = Array.from(accessRequests.values()).filter(
       request => request.status === 'pending'
     ).length;
@@ -49,7 +52,6 @@ const Index = () => {
     };
     
     try {
-      // Save to both localStorage and IndexedDB
       accessRequests.set(requestId, requestData);
       await saveToIndexedDB('accessRequests', requestData);
       setPendingCount(prev => prev + 1);
@@ -73,8 +75,14 @@ const Index = () => {
     const group = groups.get(groupId);
     if (group) {
       toast.success(`Request submitted for ${group.name} group access`);
+      setSheetOpen(false);
     }
   };
+
+  const filteredGroups = Array.from(groups.entries()).filter(([_, group]) =>
+    group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    group.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const features = [
     {
@@ -160,8 +168,8 @@ const Index = () => {
               <AppWindow className="w-5 h-5 mr-2" />
               Request Application Access
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
                 <Button
                   size="lg"
                   className="w-full animate-fadeIn hover-scale sm:w-auto"
@@ -169,20 +177,45 @@ const Index = () => {
                   <Group className="w-5 h-5 mr-2" />
                   Request Group Access
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {Array.from(groups.entries()).map(([id, group]) => (
-                  <DropdownMenuItem
-                    key={id}
-                    onClick={() => handleGroupRequest(id)}
-                    className="flex items-center gap-2"
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>{group.name}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Request Group Access</SheetTitle>
+                </SheetHeader>
+                <div className="py-6">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search groups..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+                <ScrollArea className="h-[500px] pr-4">
+                  <div className="space-y-4">
+                    {filteredGroups.map(([id, group]) => (
+                      <Card
+                        key={id}
+                        className="p-4 cursor-pointer hover:bg-accent transition-colors"
+                        onClick={() => handleGroupRequest(id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Users className="w-5 h-5 text-primary mt-0.5" />
+                          <div>
+                            <h3 className="font-semibold">{group.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {group.description}
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
 
