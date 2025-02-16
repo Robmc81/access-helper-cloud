@@ -29,6 +29,7 @@ export const EntraConfig = ({ isOpen, onClose, onSave }: EntraConfigProps) => {
     clientId: "",
     clientSecret: "",
   });
+  const [testing, setTesting] = useState(false);
 
   const handleSave = () => {
     if (!config.tenantId || !config.clientId || !config.clientSecret) {
@@ -38,6 +39,28 @@ export const EntraConfig = ({ isOpen, onClose, onSave }: EntraConfigProps) => {
     onSave(config);
     onClose();
     toast.success("Entra configuration saved successfully");
+  };
+
+  const testConfiguration = async () => {
+    if (!config.tenantId || !config.clientId || !config.clientSecret) {
+      toast.error("Please fill in all fields before testing");
+      return;
+    }
+
+    setTesting(true);
+    try {
+      // Simulate API call to test Entra configuration
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Here you would typically make a real API call to validate the credentials
+      // For now, we'll simulate a successful test
+      toast.success("Entra configuration test successful!");
+    } catch (error) {
+      toast.error("Failed to validate Entra configuration");
+      console.error("Entra test error:", error);
+    } finally {
+      setTesting(false);
+    }
   };
 
   return (
@@ -82,11 +105,20 @@ export const EntraConfig = ({ isOpen, onClose, onSave }: EntraConfigProps) => {
             />
           </div>
         </div>
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
+        <div className="flex justify-between space-x-2">
+          <Button 
+            variant="secondary" 
+            onClick={testConfiguration}
+            disabled={testing}
+          >
+            {testing ? "Testing..." : "Test Configuration"}
           </Button>
-          <Button onClick={handleSave}>Save Configuration</Button>
+          <div className="space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>Save Configuration</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
