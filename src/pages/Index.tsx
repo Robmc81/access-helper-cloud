@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, UserPlus, Lock, Users } from "lucide-react";
+import { User, UserPlus, Lock, Users, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
@@ -67,11 +67,11 @@ const Index = () => {
       <div className="container px-4 py-16 mx-auto">
         <div className="text-center animate-fadeIn">
           <div className="inline-flex items-center px-4 py-2 mb-8 text-sm font-medium text-success-foreground bg-success/10 rounded-full">
-            <Lock className="w-4 h-4 mr-2" />
-            Secure Access Management
+            <Shield className="w-5 h-5 mr-2" />
+            U.S. Army
           </div>
-          <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-6xl">
-            Streamline Access Management
+          <h1 className="mb-4 text-2xl font-bold tracking-tight">
+            OCG DDIL
           </h1>
           <p className="max-w-2xl mx-auto mb-12 text-lg text-gray-600">
             Simplify application access requests and entitlement management with our
