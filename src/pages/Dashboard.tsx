@@ -5,7 +5,6 @@ import { User, Lock, Home, Check, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { accessRequests, identityStore } from "@/stores/accessStore";
 import { toast } from "sonner";
-import { useState } from "react";
 
 type RequestStatus = 'pending' | 'approved' | 'rejected';
 
@@ -55,12 +54,14 @@ const Dashboard = () => {
     .filter(([_, request]) => request.status === 'pending')
     .sort((a, b) => b[1].timestamp.getTime() - a[1].timestamp.getTime());
 
-  // Get all requests for the current email (if email is provided)
-  const userRequests = email 
-    ? Array.from(accessRequests.entries())
-      .filter(([_, request]) => request.email === email)
-      .sort((a, b) => b[1].timestamp.getTime() - a[1].timestamp.getTime())
-    : [];
+  // Get all processed requests (approved or rejected)
+  const processedRequests = Array.from(accessRequests.entries())
+    .filter(([_, request]) => request.status === 'approved' || request.status === 'rejected')
+    .sort((a, b) => {
+      const timeA = b[1].approvedAt?.getTime() || b[1].timestamp.getTime();
+      const timeB = a[1].approvedAt?.getTime() || a[1].timestamp.getTime();
+      return timeA - timeB;
+    });
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-b from-gray-50 to-gray-100">
@@ -127,39 +128,41 @@ const Dashboard = () => {
             )}
           </Card>
 
-          {/* User Request History Section (only shown if email is provided) */}
-          {email && (
-            <Card className="p-6 glass-card">
-              <h2 className="flex items-center mb-4 text-xl font-semibold">
-                <Lock className="w-5 h-5 mr-2 text-success" />
-                Access Request History
-              </h2>
-              {userRequests.length > 0 ? (
-                <div className="space-y-6">
-                  {userRequests.map(([reqId, request]) => (
-                    <div key={reqId} className="p-4 border rounded-lg">
-                      <div className="space-y-2">
-                        <p className="text-gray-600">Email: {request.email}</p>
+          {/* Access Request History Section */}
+          <Card className="p-6 glass-card">
+            <h2 className="flex items-center mb-4 text-xl font-semibold">
+              <Lock className="w-5 h-5 mr-2 text-success" />
+              Access Request History
+            </h2>
+            {processedRequests.length > 0 ? (
+              <div className="space-y-6">
+                {processedRequests.map(([reqId, request]) => (
+                  <div key={reqId} className="p-4 border rounded-lg">
+                    <div className="space-y-2">
+                      <p className="text-gray-600">Name: {request.fullName}</p>
+                      <p className="text-gray-600">Email: {request.email}</p>
+                      <p className="text-gray-600">Department: {request.department}</p>
+                      <p className="text-gray-600">
+                        Status: <span className={`font-semibold capitalize ${
+                          request.status === 'approved' ? 'text-green-600' : 'text-red-600'
+                        }`}>{request.status}</span>
+                      </p>
+                      <p className="text-gray-600">
+                        Submitted: {request.timestamp.toLocaleDateString()}
+                      </p>
+                      {request.approvedAt && (
                         <p className="text-gray-600">
-                          Status: <span className="font-semibold capitalize">{request.status}</span>
+                          {request.status === 'approved' ? 'Approved' : 'Rejected'}: {request.approvedAt.toLocaleDateString()}
                         </p>
-                        <p className="text-gray-600">
-                          Submitted: {request.timestamp.toLocaleDateString()}
-                        </p>
-                        {request.approvedAt && (
-                          <p className="text-gray-600">
-                            Approved: {request.approvedAt.toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-600">No access request history found.</p>
-              )}
-            </Card>
-          )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600">No processed requests found.</p>
+            )}
+          </Card>
         </div>
       </div>
     </div>
