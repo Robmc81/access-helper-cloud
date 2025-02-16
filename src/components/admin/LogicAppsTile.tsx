@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Settings, Workflow } from "lucide-react";
+import { Settings, Workflow, Link } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -128,13 +128,23 @@ export const LogicAppsTile = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Connect to Azure Logic Apps to automate user provisioning and access management workflows.
             </p>
-            {workflowUrl && (
-              <p className="text-sm">
-                Current workflow URL: <code className="bg-gray-100 px-2 py-1 rounded">{workflowUrl}</code>
+            {workflowUrl ? (
+              <div className="flex items-start space-x-2 bg-gray-50 p-3 rounded-lg border">
+                <Link className="h-4 w-4 text-blue-500 mt-1" />
+                <div className="space-y-1 flex-1">
+                  <p className="text-sm font-medium">Current Workflow URL</p>
+                  <p className="text-sm break-all font-mono bg-white px-2 py-1 rounded border">
+                    {workflowUrl}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                No workflow URL configured yet. Click Configure to set up the integration.
               </p>
             )}
           </div>
