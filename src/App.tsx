@@ -7,6 +7,7 @@ import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import Identities from "./pages/Identities";
+import Groups from "./pages/Groups";
 import "./App.css";
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/identities" element={<Identities />} />
+        <Route path="/groups" element={<Groups />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
