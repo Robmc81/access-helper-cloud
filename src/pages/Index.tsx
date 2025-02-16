@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,14 +14,14 @@ const features = [
     icon: User,
     title: "Access Request",
     description:
-      "Centralized identity store with powerful search capabilities for efficient user management.",
+      "View and manage all approved identities in the system.",
     route: "/dashboard",
   },
   {
     icon: Users,
     title: "Identity Store",
     description:
-      "View and manage all approved identities in the system.",
+      "Centralized identity store with powerful search capabilities for efficient user management.",
     route: "/identities",
   },
 ];
