@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Database, Upload, FileJson, FileXml } from "lucide-react";
+import { Database, Upload, FileJson, FileType } from "lucide-react";
 import { exportData, importData } from "@/stores/indexedDBStore";
 import { useRef } from "react";
 
@@ -32,7 +32,7 @@ export const BackupRestore = () => {
             className="w-full sm:w-auto"
             variant="secondary"
           >
-            <FileXml className="w-4 h-4 mr-2" />
+            <FileType className="w-4 h-4 mr-2" />
             Export as XML
           </Button>
           <Button
