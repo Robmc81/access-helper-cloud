@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User, Lock, Home, Check, X, Group } from "lucide-react";
@@ -35,12 +36,29 @@ const Dashboard = () => {
       await saveToIndexedDB('accessRequests', updatedRequest);
       
       if (approved) {
-        await provisionIdentity({
-          email: request.email,
-          fullName: request.fullName,
-          department: request.department,
-          source: 'access_request'
-        });
+        // For group requests, we don't create a new identity if one already exists
+        if (request.type === 'group') {
+          // Only create identity if it doesn't exist
+          const existingIdentity = Array.from(identityStore.values()).find(
+            identity => identity.email === request.email
+          );
+
+          if (!existingIdentity) {
+            await provisionIdentity({
+              email: request.email,
+              fullName: request.fullName,
+              department: request.department,
+              source: 'group_request'
+            });
+          }
+        } else {
+          await provisionIdentity({
+            email: request.email,
+            fullName: request.fullName,
+            department: request.department,
+            source: request.type === 'guest' ? 'guest_request' : 'access_request'
+          });
+        }
         
         toast.success("Access request approved successfully");
       } else {
