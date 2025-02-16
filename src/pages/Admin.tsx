@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Home, Database, RefreshCw, Settings, Shield } from "lucide-react";
@@ -11,7 +10,7 @@ type ConnectorStatus = "active" | "inactive" | "error";
 interface Connector {
   id: string;
   name: string;
-  type: "ldap" | "azure-ad" | "entra" | "custom";
+  type: "ldap" | "entra" | "custom";
   status: ConnectorStatus;
   lastSync: Date | null;
   description: string;
@@ -28,14 +27,6 @@ const initialConnectors: Connector[] = [
   },
   {
     id: "2",
-    name: "Azure AD Connector",
-    type: "azure-ad",
-    status: "inactive",
-    lastSync: null,
-    description: "Cloud identity synchronization with Azure Active Directory"
-  },
-  {
-    id: "3",
     name: "Microsoft Entra Integration",
     type: "entra",
     status: "inactive",
