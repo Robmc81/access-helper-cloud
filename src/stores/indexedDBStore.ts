@@ -426,6 +426,7 @@ export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
 };
 
 const provisionToOpenLDAP = async (userData: any, config: OpenLDAPConfig) => {
+  let client;
   try {
     console.log('Starting OpenLDAP provisioning for user:', { 
       email: userData.email, 
@@ -438,30 +439,60 @@ const provisionToOpenLDAP = async (userData: any, config: OpenLDAPConfig) => {
       throw new Error('Invalid LDAP URL format. Must start with ldap:// or ldaps://');
     }
 
-    console.log('OpenLDAP configuration:', { 
-      url: config.url, 
-      bindDN: config.bindDN,
-      baseDN: config.baseDN,
-      userContainer: config.userContainer
+    console.log('Attempting to connect to LDAP server:', config.url);
+    
+    const ldap = require('ldapjs');
+    client = ldap.createClient({
+      url: config.url,
+      timeout: 5000,
+      connectTimeout: 5000,
     });
 
-    console.log('Step 1: Establishing LDAP connection...');
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    console.log('Step 2: Binding to LDAP server...');
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    console.log('Step 3: Creating user entry...');
+    // Convert client.bind to Promise
+    await new Promise((resolve, reject) => {
+      client.bind(config.bindDN, config.bindPassword, (err: any) => {
+        if (err) {
+          console.error('LDAP bind error:', err);
+          reject(err);
+        } else {
+          console.log('Successfully bound to LDAP server');
+          resolve(null);
+        }
+      });
+    });
+
     const userDN = `cn=${userData.email},${config.userContainer},${config.baseDN}`;
-    console.log('User DN:', userDN);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log('Creating user with DN:', userDN);
+
+    const entry = {
+      objectClass: ['top', 'person', 'organizationalPerson', 'inetOrgPerson'],
+      cn: userData.email,
+      sn: userData.fullName.split(' ').pop() || '',
+      givenName: userData.fullName.split(' ')[0] || '',
+      mail: userData.email,
+      departmentNumber: userData.department,
+      userPassword: 'changeme' // You might want to generate this or handle it differently
+    };
+
+    // Convert client.add to Promise
+    await new Promise((resolve, reject) => {
+      client.add(userDN, entry, (err: any) => {
+        if (err) {
+          console.error('LDAP add error:', err);
+          reject(err);
+        } else {
+          console.log('Successfully added user to LDAP');
+          resolve(null);
+        }
+      });
+    });
 
     await addLog('INFO', `User provisioned to OpenLDAP: ${userData.email}`, {
       userDN,
       attributes: {
         cn: userData.email,
-        sn: userData.fullName.split(' ').pop(),
-        givenName: userData.fullName.split(' ')[0],
+        sn: entry.sn,
+        givenName: entry.givenName,
         mail: userData.email,
         department: userData.department
       }
@@ -482,6 +513,10 @@ const provisionToOpenLDAP = async (userData: any, config: OpenLDAPConfig) => {
       }
     });
     throw error;
+  } finally {
+    if (client) {
+      client.unbind();
+    }
   }
 };
 
