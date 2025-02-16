@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,20 +8,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Settings, Workflow, Link, Play } from "lucide-react";
+import { Settings, Workflow, Link, Play, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { addLog } from "@/stores/indexedDBStore";
 import { provisionIdentity } from "@/stores/indexedDBStore";
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export const LogicAppsTile = () => {
   const navigate = useNavigate();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   const [workflowUrl, setWorkflowUrl] = useState("https://prod-01.northcentralus.logic.azure.com:443/workflows/70b2a44d77534c67a9556e148bc07946/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=8aORmU8_I6hdR7IjWBqLauU03sXEvZBqtCiwKiBeW_c");
   const [newUrl, setNewUrl] = useState("https://prod-01.northcentralus.logic.azure.com:443/workflows/70b2a44d77534c67a9556e148bc07946/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=8aORmU8_I6hdR7IjWBqLauU03sXEvZBqtCiwKiBeW_c");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSchedulerEnabled, setIsSchedulerEnabled] = useState(false);
+  const [intervalValue, setIntervalValue] = useState("15");
+  const [intervalUnit, setIntervalUnit] = useState("minutes");
+  const schedulerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (schedulerRef.current) {
+        clearInterval(schedulerRef.current);
+      }
+    };
+  }, []);
 
   const handleConfigure = () => {
     setIsConfigOpen(true);
@@ -63,12 +79,9 @@ export const LogicAppsTile = () => {
       const responseData = await response.json();
       console.log('Received data:', responseData);
       
-      // Convert single user object to array or use array as is
       const users = Array.isArray(responseData) ? responseData : [responseData];
       
-      // Filter out the message field if it exists and process users
       const processedUsers = users.filter(user => {
-        // Check if the object has required user fields
         if (!user.email || !user.fullName || !user.department) {
           console.warn('Skipping invalid user data:', user);
           return false;
@@ -76,7 +89,6 @@ export const LogicAppsTile = () => {
         return true;
       });
 
-      // Process each user
       for (const user of processedUsers) {
         await provisionIdentity({
           email: user.email,
@@ -106,6 +118,46 @@ export const LogicAppsTile = () => {
     }
   };
 
+  const startScheduler = () => {
+    if (schedulerRef.current) {
+      clearInterval(schedulerRef.current);
+    }
+
+    const intervalInMs = intervalUnit === "minutes" 
+      ? parseInt(intervalValue) * 60 * 1000 
+      : parseInt(intervalValue) * 60 * 60 * 1000;
+
+    schedulerRef.current = setInterval(handleProcessWorkload, intervalInMs);
+    toast.success(`Scheduler started - running every ${intervalValue} ${intervalUnit}`);
+    try {
+      addLog('INFO', 'Workflow scheduler started', { interval: intervalValue, unit: intervalUnit });
+    } catch (error) {
+      console.error('Failed to log scheduler start:', error);
+    }
+  };
+
+  const stopScheduler = () => {
+    if (schedulerRef.current) {
+      clearInterval(schedulerRef.current);
+      schedulerRef.current = null;
+      toast.success('Scheduler stopped');
+      try {
+        addLog('INFO', 'Workflow scheduler stopped');
+      } catch (error) {
+        console.error('Failed to log scheduler stop:', error);
+      }
+    }
+  };
+
+  const handleSchedulerToggle = (enabled: boolean) => {
+    setIsSchedulerEnabled(enabled);
+    if (enabled) {
+      startScheduler();
+    } else {
+      stopScheduler();
+    }
+  };
+
   return (
     <>
       <Card>
@@ -125,6 +177,15 @@ export const LogicAppsTile = () => {
                 size="sm"
               >
                 View Logs
+              </Button>
+              <Button 
+                onClick={() => setIsSchedulerOpen(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Clock className="h-4 w-4" />
+                Schedule
               </Button>
               <Button 
                 onClick={handleConfigure}
@@ -193,6 +254,56 @@ export const LogicAppsTile = () => {
             <Button onClick={handleSave} className="w-full">
               Save Configuration
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSchedulerOpen} onOpenChange={setIsSchedulerOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Workflow</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Enable Scheduler</Label>
+                <p className="text-sm text-muted-foreground">
+                  Automatically run the workflow at regular intervals
+                </p>
+              </div>
+              <Switch
+                checked={isSchedulerEnabled}
+                onCheckedChange={handleSchedulerToggle}
+              />
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label>Interval</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={intervalValue}
+                  onChange={(e) => setIntervalValue(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+              <div className="flex-1">
+                <Label>Unit</Label>
+                <Select
+                  value={intervalUnit}
+                  onValueChange={setIntervalUnit}
+                >
+                  <SelectTrigger className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="minutes">Minutes</SelectItem>
+                    <SelectItem value="hours">Hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
