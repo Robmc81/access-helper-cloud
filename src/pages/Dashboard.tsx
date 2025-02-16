@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { User, Lock, Home, Check, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { accessRequests, identityStore } from "@/stores/accessStore";
+import { saveToIndexedDB, provisionIdentity } from "@/stores/indexedDBStore";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -15,7 +16,7 @@ const Dashboard = () => {
   const { requestId, email } = location.state || {};
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleApproval = (id: string, approved: boolean) => {
+  const handleApproval = async (id: string, approved: boolean) => {
     try {
       if (!accessRequests.has(id)) {
         toast.error("Access request not found");
@@ -32,17 +33,17 @@ const Dashboard = () => {
         approvedAt: new Date()
       };
       
-      // Update access request
+      // Update access request in both stores
       accessRequests.set(id, updatedRequest);
+      await saveToIndexedDB('accessRequests', updatedRequest);
       
-      // If approved, add to identity store
+      // If approved, add to identity store using provisionIdentity
       if (approved) {
-        identityStore.set(request.email, {
-          fullName: request.fullName,
+        await provisionIdentity({
           email: request.email,
+          fullName: request.fullName,
           department: request.department,
-          createdAt: new Date(),
-          requestId: id
+          source: 'access_request'
         });
         
         toast.success("Access request approved successfully");
