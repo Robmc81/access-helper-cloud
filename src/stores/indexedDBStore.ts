@@ -290,6 +290,7 @@ export const provisionIdentity = async (userData: {
   source?: string;
 }) => {
   try {
+    console.log('Starting identity provisioning for:', userData);
     const identityData = {
       ...userData,
       createdAt: new Date(),
@@ -320,10 +321,17 @@ export const provisionIdentity = async (userData: {
     // Create sync record
     await createSyncRecord('identity', existingUser ? 'update' : 'create', identityData);
 
-    // Provision to OpenLDAP if configured
+    // Check OpenLDAP configuration
+    console.log('Checking OpenLDAP configuration...');
     const config = await getOpenLDAPConfig();
+    console.log('OpenLDAP config status:', config ? `Enabled: ${config.enabled}` : 'Not configured');
+    
     if (config && config.enabled) {
+      console.log('OpenLDAP is enabled, attempting to provision user...');
       await provisionToOpenLDAP(identityData, config);
+    } else {
+      console.log('OpenLDAP is not enabled or not configured. Skipping LDAP provisioning.');
+      await addLog('INFO', `User saved to IndexedDB only (OpenLDAP disabled): ${userData.email}`);
     }
     
     toast.success(`${existingUser ? 'Updated' : 'Provisioned'} user: ${userData.fullName}`);
