@@ -10,6 +10,7 @@ interface Identity {
   fullName: string;
   department: string;
   createdAt: Date;
+  source?: string;
 }
 
 export const IdentityStoreTable = () => {
@@ -32,6 +33,13 @@ export const IdentityStoreTable = () => {
     );
   };
 
+  const formatSource = (source?: string) => {
+    if (!source) return 'Manual';
+    return source.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
   return (
     <Card className="p-6 glass-card">
       <h2 className="flex items-center mb-4 text-xl font-semibold">
@@ -44,6 +52,7 @@ export const IdentityStoreTable = () => {
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Name</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Department</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Source</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Added (ET)</th>
             </tr>
           </thead>
@@ -60,13 +69,16 @@ export const IdentityStoreTable = () => {
                   {identity.department}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-500">
+                  {formatSource(identity.source)}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-500">
                   {formatDateTime(identity.createdAt)}
                 </td>
               </tr>
             ))}
             {identities.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-4 py-3 text-sm text-gray-500 text-center">
+                <td colSpan={4} className="px-4 py-3 text-sm text-gray-500 text-center">
                   No approved identities yet
                 </td>
               </tr>
