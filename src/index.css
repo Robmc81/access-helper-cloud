@@ -34,10 +34,13 @@
   }
 
   body {
-    @apply bg-background text-foreground font-inter antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
     font-feature-settings: "ss01" 1, "ss02" 1, "cv01" 1, "cv02" 1, "cv03" 1, "cv04" 1;
   }
+}
 
+@layer components {
   .glass-card {
     @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-lg;
   }
@@ -45,12 +48,4 @@
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-102;
   }
-}
-
-.font-inter {
-  font-family: 'Inter', sans-serif;
-}
-
-.scale-102 {
-  scale: 1.02;
 }
