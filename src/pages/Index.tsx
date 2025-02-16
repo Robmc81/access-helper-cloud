@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
 import { accessRequests } from "@/stores/accessStore";
+import { saveToIndexedDB } from "@/stores/indexedDBStore";
 import * as z from "zod";
 
 const features = [
@@ -35,7 +37,6 @@ const features = [
 
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
-  const [isRequestingGuestAccess, setIsRequestingGuestAccess] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [dialogType, setDialogType] = useState<'regular' | 'guest'>('regular');
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ const Index = () => {
     setIsRequestingAccess(true);
     const requestId = crypto.randomUUID();
     const requestData = {
+      id: requestId,
       fullName: values.fullName,
       email: values.email,
       department: values.department,
@@ -52,15 +54,20 @@ const Index = () => {
       timestamp: new Date(),
       type: isGuest ? 'guest' : 'regular',
     };
-    accessRequests.set(requestId, requestData);
     
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // Save to both localStorage and IndexedDB
+      accessRequests.set(requestId, requestData);
+      await saveToIndexedDB('accessRequests', requestData);
+      
+      toast.success(`${isGuest ? 'Guest access' : 'Access'} request submitted successfully! Check pending requests for status.`);
+    } catch (error) {
+      console.error('Error saving access request:', error);
+      toast.error('Failed to save access request');
+    }
     
-    toast.success(`${isGuest ? 'Guest access' : 'Access'} request submitted successfully! Check pending requests for status.`);
     setShowDialog(false);
     setIsRequestingAccess(false);
-    
-    console.log("Current access requests:", Array.from(accessRequests.entries()));
   };
 
   const openDialog = (type: 'regular' | 'guest') => {
