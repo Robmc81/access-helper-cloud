@@ -14,8 +14,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { addLog } from "@/stores/indexedDBStore";
 import { provisionIdentity } from "@/stores/indexedDBStore";
+import { useNavigate } from "react-router-dom";
 
 export const LogicAppsTile = () => {
+  const navigate = useNavigate();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [workflowUrl, setWorkflowUrl] = useState("https://prod-01.northcentralus.logic.azure.com:443/workflows/70b2a44d77534c67a9556e148bc07946/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=8aORmU8_I6hdR7IjWBqLauU03sXEvZBqtCiwKiBeW_c");
   const [newUrl, setNewUrl] = useState("https://prod-01.northcentralus.logic.azure.com:443/workflows/70b2a44d77534c67a9556e148bc07946/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=8aORmU8_I6hdR7IjWBqLauU03sXEvZBqtCiwKiBeW_c");
@@ -29,12 +31,22 @@ export const LogicAppsTile = () => {
     setWorkflowUrl(newUrl);
     setIsConfigOpen(false);
     toast.success('Workflow URL saved successfully');
-    await addLog('INFO', 'Logic App workflow URL updated', { url: newUrl });
+    try {
+      await addLog('INFO', 'Logic App workflow URL updated', { url: newUrl });
+    } catch (error) {
+      console.error('Failed to log URL update:', error);
+    }
+  };
+
+  const handleViewLogs = () => {
+    navigate('/logs');
   };
 
   const handleProcessWorkload = async () => {
     setIsProcessing(true);
     try {
+      console.log('Sending request to:', workflowUrl);
+      
       const response = await fetch(workflowUrl, {
         method: 'POST',
         headers: {
@@ -42,11 +54,14 @@ export const LogicAppsTile = () => {
         },
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('Received data:', data);
       
       // Validate the response data
       if (!Array.isArray(data)) {
@@ -69,12 +84,20 @@ export const LogicAppsTile = () => {
       }
 
       toast.success(`Successfully processed ${data.length} users`);
-      await addLog('INFO', 'Logic App workflow processed successfully', { userCount: data.length });
+      try {
+        await addLog('INFO', 'Logic App workflow processed successfully', { userCount: data.length });
+      } catch (error) {
+        console.error('Failed to log success:', error);
+      }
 
     } catch (error) {
       console.error('Error processing workflow:', error);
-      toast.error('Failed to process workflow');
-      await addLog('ERROR', 'Failed to process Logic App workflow', { error: error.message });
+      toast.error('Failed to process workflow. Check logs for details.');
+      try {
+        await addLog('ERROR', 'Failed to process Logic App workflow', { error: error.message });
+      } catch (logError) {
+        console.error('Failed to log error:', logError);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -92,14 +115,23 @@ export const LogicAppsTile = () => {
                 <CardDescription>Automate user provisioning workflows</CardDescription>
               </div>
             </div>
-            <Button 
-              onClick={handleConfigure}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              Configure
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleViewLogs}
+                variant="outline"
+                size="sm"
+              >
+                View Logs
+              </Button>
+              <Button 
+                onClick={handleConfigure}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Configure
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
