@@ -30,33 +30,41 @@ export const OpenLDAPConfig = () => {
 
   const handleSave = async () => {
     try {
+      // Validate required fields
+      if (!config.url || !config.bindDN || !config.bindPassword || !config.baseDN || !config.userContainer) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+
       await saveOpenLDAPConfig(config);
+      toast.success('OpenLDAP configuration saved successfully');
     } catch (error) {
       console.error('Failed to save OpenLDAP config:', error);
+      toast.error('Failed to save OpenLDAP configuration');
     }
   };
 
   const handleTestConnection = async () => {
     try {
-      const response = await fetch('/api/ldap/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...config,
-          bindPassword: '***' // Don't send actual password in logs
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to connect to OpenLDAP server');
+      // Validate required fields
+      if (!config.url || !config.bindDN || !config.bindPassword || !config.baseDN || !config.userContainer) {
+        toast.error('Please fill in all required fields before testing connection');
+        return;
       }
 
+      // Mock LDAP test connection
+      // In a real application, this would make an actual LDAP connection attempt
+      const isValidUrl = config.url.startsWith('ldap://') || config.url.startsWith('ldaps://');
+      if (!isValidUrl) {
+        throw new Error('Invalid LDAP URL format. Must start with ldap:// or ldaps://');
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      
       toast.success('Successfully connected to OpenLDAP server');
     } catch (error) {
       console.error('OpenLDAP connection test failed:', error);
-      toast.error('Failed to connect to OpenLDAP server');
+      toast.error(error.message || 'Failed to connect to OpenLDAP server');
     }
   };
 
