@@ -14,53 +14,60 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { addLog } from "@/stores/indexedDBStore";
 
+const DB_NAME = 'ocgDDIL';
+const STORE_NAME = 'systemConfig';
+
 export const LogicAppsTile = () => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [workflowUrl, setWorkflowUrl] = useState("");
   const [newUrl, setNewUrl] = useState("");
+  const [db, setDb] = useState<IDBDatabase | null>(null);
 
   useEffect(() => {
-    const loadWorkflowUrl = async () => {
-      try {
-        const dbRequest = window.indexedDB.open('ocgDDIL', 1);
+    const initDb = () => {
+      const request = window.indexedDB.open(DB_NAME, 1);
+
+      request.onerror = async (event) => {
+        console.error('Database error:', event);
+        await addLog('ERROR', 'Failed to open database', { error: 'Database error' });
+      };
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBRequest).result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME);
+        }
+      };
+
+      request.onsuccess = async (event) => {
+        const db = (event.target as IDBRequest).result;
+        setDb(db);
         
-        dbRequest.onerror = async (event) => {
-          console.error('Database error:', event);
-          await addLog('ERROR', 'Failed to open database', { error: 'Database error' });
-        };
-
-        dbRequest.onupgradeneeded = (event) => {
-          const db = (event.target as IDBRequest).result;
-          if (!db.objectStoreNames.contains('systemConfig')) {
-            db.createObjectStore('systemConfig');
-          }
-        };
-
-        dbRequest.onsuccess = async (event) => {
-          const db = (event.target as IDBRequest).result;
-          try {
-            const transaction = db.transaction('systemConfig', 'readonly');
-            const store = transaction.objectStore('systemConfig');
-            const request = store.get('logicAppWorkflowUrl');
-            
-            request.onsuccess = () => {
-              if (request.result) {
-                setWorkflowUrl(request.result);
-                setNewUrl(request.result);
-              }
-            };
-          } catch (error) {
-            console.error('Transaction error:', error);
-            await addLog('ERROR', 'Failed to read workflow URL', { error: String(error) });
-          }
-        };
-      } catch (error) {
-        console.error('Error loading workflow URL:', error);
-        await addLog('ERROR', 'Failed to load workflow URL', { error: String(error) });
-      }
+        try {
+          const transaction = db.transaction(STORE_NAME, 'readonly');
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.get('logicAppWorkflowUrl');
+          
+          request.onsuccess = () => {
+            if (request.result) {
+              setWorkflowUrl(request.result);
+              setNewUrl(request.result);
+            }
+          };
+        } catch (error) {
+          console.error('Transaction error:', error);
+          await addLog('ERROR', 'Failed to read workflow URL', { error: String(error) });
+        }
+      };
     };
 
-    loadWorkflowUrl();
+    initDb();
+
+    return () => {
+      if (db) {
+        db.close();
+      }
+    };
   }, []);
 
   const handleConfigure = () => {
@@ -68,36 +75,37 @@ export const LogicAppsTile = () => {
   };
 
   const handleSave = async () => {
+    if (!db) {
+      toast.error('Database not initialized');
+      return;
+    }
+
     try {
       // Basic URL validation
       new URL(newUrl);
-
-      const dbRequest = window.indexedDB.open('ocgDDIL', 1);
       
-      dbRequest.onsuccess = async (event) => {
-        const db = (event.target as IDBRequest).result;
-        try {
-          const transaction = db.transaction('systemConfig', 'readwrite');
-          const store = transaction.objectStore('systemConfig');
-          const request = store.put(newUrl, 'logicAppWorkflowUrl');
-          
-          transaction.oncomplete = async () => {
-            setWorkflowUrl(newUrl);
-            setIsConfigOpen(false);
-            toast.success('Workflow URL saved successfully');
-            await addLog('INFO', 'Logic App workflow URL updated', { url: newUrl });
-          };
+      try {
+        const transaction = db.transaction(STORE_NAME, 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        store.put(newUrl, 'logicAppWorkflowUrl');
+        
+        transaction.oncomplete = async () => {
+          setWorkflowUrl(newUrl);
+          setIsConfigOpen(false);
+          toast.success('Workflow URL saved successfully');
+          await addLog('INFO', 'Logic App workflow URL updated', { url: newUrl });
+        };
 
-          transaction.onerror = async () => {
-            toast.error('Failed to save workflow URL');
-            await addLog('ERROR', 'Failed to save workflow URL', { error: 'Transaction error' });
-          };
-        } catch (error) {
-          console.error('Transaction error:', error);
+        transaction.onerror = async (event) => {
+          console.error('Transaction error:', event);
           toast.error('Failed to save workflow URL');
-          await addLog('ERROR', 'Failed to save workflow URL', { error: String(error) });
-        }
-      };
+          await addLog('ERROR', 'Failed to save workflow URL', { error: 'Transaction error' });
+        };
+      } catch (error) {
+        console.error('Transaction error:', error);
+        toast.error('Failed to save workflow URL');
+        await addLog('ERROR', 'Failed to save workflow URL', { error: String(error) });
+      }
     } catch (error) {
       console.error('Error saving workflow URL:', error);
       toast.error('Please enter a valid URL');
