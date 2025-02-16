@@ -64,6 +64,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="fixed top-4 left-4">
+        <img 
+          src="/lovable-uploads/bd8565df-34df-4671-aed8-f98870e9b36d.png" 
+          alt="U.S. Army Logo" 
+          className="w-24 h-auto"
+        />
+      </div>
       <div className="container px-4 py-16 mx-auto">
         <div className="text-center animate-fadeIn">
           <div className="inline-flex items-center px-4 py-2 mb-8 text-sm font-medium text-success-foreground bg-success/10 rounded-full">
