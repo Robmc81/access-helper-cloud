@@ -29,6 +29,9 @@ const db = await openDB(DB_NAME, DB_VERSION, {
     if (!db.objectStoreNames.contains('syncStore')) {
       db.createObjectStore('syncStore', { keyPath: 'id' });
     }
+    if (!db.objectStoreNames.contains('systemLogs')) {
+      db.createObjectStore('systemLogs', { keyPath: 'id' });
+    }
   },
 });
 
@@ -38,8 +41,10 @@ export const saveToIndexedDB = async (storeName: string, data: any) => {
     const store = tx.objectStore(storeName);
     await store.put(data);
     await tx.done;
+    await addLog('INFO', `Data saved to ${storeName}`, { id: data.id || data.email });
   } catch (error) {
     console.error(`Error saving to ${storeName}:`, error);
+    await addLog('ERROR', `Failed to save data to ${storeName}`, { error: error.message });
     toast.error(`Failed to save data to ${storeName}`);
   }
 };
@@ -51,6 +56,7 @@ export const getAllFromIndexedDB = async (storeName: string) => {
     return await store.getAll();
   } catch (error) {
     console.error(`Error reading from ${storeName}:`, error);
+    await addLog('ERROR', `Failed to read data from ${storeName}`, { error: error.message });
     toast.error(`Failed to read data from ${storeName}`);
     return [];
   }
@@ -61,11 +67,13 @@ export const exportData = async () => {
     const accessRequests = await getAllFromIndexedDB('accessRequests');
     const identityStore = await getAllFromIndexedDB('identityStore');
     const syncStore = await getAllFromIndexedDB('syncStore');
+    const systemLogs = await getLogs();
     
     const exportData = {
       accessRequests,
       identityStore,
       syncStore,
+      systemLogs,
       exportDate: new Date().toISOString(),
     };
     
@@ -103,6 +111,7 @@ export const exportData = async () => {
     toast.success('Data exported successfully');
   } catch (error) {
     console.error('Export error:', error);
+    await addLog('ERROR', 'Failed to export data', { error: error.message });
     toast.error('Failed to export data');
   }
 };
@@ -133,6 +142,7 @@ export const importData = async (file: File) => {
     toast.success('Data imported successfully');
   } catch (error) {
     console.error('Import error:', error);
+    await addLog('ERROR', 'Failed to import data', { error: error.message });
     toast.error('Failed to import data');
   }
 };
@@ -166,6 +176,7 @@ export const scheduleAutoBackup = async () => {
     }
   } catch (error) {
     console.error('Auto-backup error:', error);
+    await addLog('ERROR', 'Failed to set up auto-backup', { error: error.message });
     toast.error('Failed to set up auto-backup');
   }
 };
@@ -298,6 +309,7 @@ export const provisionIdentity = async (userData: {
     return identityData;
   } catch (error) {
     console.error('Error provisioning identity:', error);
+    await addLog('ERROR', `Failed to provision identity: ${userData.email}`, { error: error.message });
     toast.error(`Failed to provision user: ${userData.fullName}`);
     throw error;
   }
@@ -319,7 +331,53 @@ export const provisionBulkIdentities = async (usersData: Array<{
     return results;
   } catch (error) {
     console.error('Error in bulk provisioning:', error);
+    await addLog('ERROR', 'Failed to complete bulk user provisioning', { error: error.message });
     toast.error('Failed to complete bulk user provisioning');
     throw error;
+  }
+};
+
+export interface SystemLog {
+  id: string;
+  timestamp: string;
+  level: "INFO" | "WARN" | "ERROR";
+  message: string;
+  details?: any;
+}
+
+export const addLog = async (
+  level: SystemLog['level'],
+  message: string,
+  details?: any
+) => {
+  try {
+    const log: SystemLog = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      details
+    };
+    
+    const tx = db.transaction('systemLogs', 'readwrite');
+    const store = tx.objectStore('systemLogs');
+    await store.add(log);
+    await tx.done;
+  } catch (error) {
+    console.error('Failed to add log:', error);
+  }
+};
+
+export const getLogs = async (limit = 100): Promise<SystemLog[]> => {
+  try {
+    const tx = db.transaction('systemLogs', 'readonly');
+    const store = tx.objectStore('systemLogs');
+    const logs = await store.getAll();
+    return logs
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+  } catch (error) {
+    console.error('Failed to get logs:', error);
+    return [];
   }
 };

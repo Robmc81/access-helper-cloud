@@ -3,33 +3,42 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Terminal, Download, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { SystemLog, getLogs } from "@/stores/indexedDBStore";
 
 export const LogsSettings = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [logs] = useState([
-    { timestamp: "2024-02-20 10:15:23", level: "INFO", message: "System startup completed" },
-    { timestamp: "2024-02-20 10:15:24", level: "INFO", message: "Identity orchestration service initialized" },
-    { timestamp: "2024-02-20 10:15:25", level: "INFO", message: "Configuration loaded successfully" },
-    { timestamp: "2024-02-20 10:16:30", level: "WARN", message: "Connection attempt timeout - retrying" },
-    { timestamp: "2024-02-20 10:16:35", level: "INFO", message: "Connection established" },
-  ]);
+  const [logs, setLogs] = useState<SystemLog[]>([]);
+
+  const fetchLogs = async () => {
+    const fetchedLogs = await getLogs();
+    setLogs(fetchedLogs);
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await fetchLogs();
     setIsRefreshing(false);
     toast.success("Logs refreshed");
   };
 
   const handleDownload = () => {
-    const logText = logs.map(log => `${log.timestamp} [${log.level}] ${log.message}`).join('\n');
+    const logText = logs.map(log => 
+      `${new Date(log.timestamp).toLocaleString()} [${log.level}] ${log.message}${
+        log.details ? ' ' + JSON.stringify(log.details) : ''
+      }`
+    ).join('\n');
+    
     const blob = new Blob([logText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'system-logs.txt';
+    a.download = `system-logs-${new Date().toISOString()}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -67,18 +76,23 @@ export const LogsSettings = () => {
       
       <ScrollArea className="h-[300px] rounded-md border">
         <div className="p-4 space-y-2 font-mono text-sm">
-          {logs.map((log, index) => (
+          {logs.map((log) => (
             <div
-              key={index}
+              key={log.id}
               className={`${
                 log.level === 'ERROR' ? 'text-red-600' :
                 log.level === 'WARN' ? 'text-yellow-600' :
                 'text-gray-600'
               }`}
             >
-              <span className="text-gray-500">{log.timestamp}</span>{' '}
+              <span className="text-gray-500">
+                {new Date(log.timestamp).toLocaleString()}
+              </span>{' '}
               <span className="font-semibold">[{log.level}]</span>{' '}
               {log.message}
+              {log.details && (
+                <span className="text-gray-500"> {JSON.stringify(log.details)}</span>
+              )}
             </div>
           ))}
         </div>
