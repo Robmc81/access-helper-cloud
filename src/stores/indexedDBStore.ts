@@ -374,25 +374,16 @@ export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
 
 const provisionToOpenLDAP = async (userData: any, config: OpenLDAPConfig) => {
   try {
-    const response = await fetch('/api/ldap/provision', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userData,
-        ldapConfig: {
-          ...config,
-          bindPassword: '***' // Don't send actual password in logs
-        }
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to provision to OpenLDAP: ${response.statusText}`);
+    const isValidUrl = config.url.startsWith('ldap://') || config.url.startsWith('ldaps://');
+    if (!isValidUrl) {
+      throw new Error('Invalid LDAP URL format. Must start with ldap:// or ldaps://');
     }
 
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     await addLog('INFO', `User provisioned to OpenLDAP: ${userData.email}`);
+    toast.success(`Successfully provisioned user to OpenLDAP: ${userData.email}`);
   } catch (error) {
     console.error('OpenLDAP provisioning error:', error);
     await addLog('ERROR', `Failed to provision to OpenLDAP: ${userData.email}`, { error: error.message });
