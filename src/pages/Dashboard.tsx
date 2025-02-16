@@ -13,17 +13,14 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { requestId, email } = location.state || {};
-  const [currentStatus, setCurrentStatus] = useState<RequestStatus>(
-    (location.state?.status as RequestStatus) || 'pending'
-  );
 
-  const handleApproval = (approved: boolean) => {
-    if (!requestId || !accessRequests.has(requestId)) {
+  const handleApproval = (id: string, approved: boolean) => {
+    if (!accessRequests.has(id)) {
       toast.error("Access request not found");
       return;
     }
 
-    const request = accessRequests.get(requestId)!;
+    const request = accessRequests.get(id)!;
     const newStatus: RequestStatus = approved ? 'approved' : 'rejected';
     
     // Update the request with new status and approval time
@@ -33,8 +30,7 @@ const Dashboard = () => {
       approvedAt: approved ? new Date() : undefined
     };
     
-    accessRequests.set(requestId, updatedRequest);
-    setCurrentStatus(newStatus);
+    accessRequests.set(id, updatedRequest);
     
     // If approved, add to identity store
     if (approved) {
@@ -43,7 +39,7 @@ const Dashboard = () => {
         email: request.email,
         department: request.department,
         createdAt: new Date(),
-        requestId: requestId
+        requestId: id
       });
       
       toast.success("Access request approved and identity added to the system");
@@ -107,7 +103,7 @@ const Dashboard = () => {
                     </div>
                     <div className="flex gap-2 mt-4">
                       <Button 
-                        onClick={() => handleApproval(true)}
+                        onClick={() => handleApproval(reqId, true)}
                         className="w-full"
                         variant="default"
                       >
@@ -115,7 +111,7 @@ const Dashboard = () => {
                         Approve
                       </Button>
                       <Button 
-                        onClick={() => handleApproval(false)}
+                        onClick={() => handleApproval(reqId, false)}
                         className="w-full"
                         variant="destructive"
                       >
