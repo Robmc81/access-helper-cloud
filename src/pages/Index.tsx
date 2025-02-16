@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,13 +18,20 @@ const formSchema = z.object({
   department: z.string().min(2, "Department must be at least 2 characters"),
 });
 
-// Simple in-memory store for access requests
+// Simple in-memory stores
 export const accessRequests = new Map<string, {
   fullName: string;
   email: string;
   department: string;
   status: 'pending' | 'approved' | 'rejected';
   timestamp: Date;
+}>();
+
+export const identityStore = new Map<string, {
+  fullName: string;
+  email: string;
+  department: string;
+  createdAt: Date;
 }>();
 
 const Index = () => {

@@ -1,9 +1,9 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Lock, Home, Check, X } from "lucide-react";
+import { User, Lock, Home, Check, X, Users } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { accessRequests } from "./Index";
+import { accessRequests, identityStore } from "./Index";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -24,6 +24,16 @@ const Dashboard = () => {
     request.status = newStatus;
     accessRequests.set(requestId, request);
     setCurrentStatus(newStatus);
+    
+    // If approved, add to identity store
+    if (approved) {
+      identityStore.set(request.email, {
+        fullName: request.fullName,
+        email: request.email,
+        department: request.department,
+        createdAt: new Date()
+      });
+    }
     
     toast.success(`Access request ${approved ? 'approved' : 'rejected'} successfully`);
   };
@@ -96,10 +106,25 @@ const Dashboard = () => {
           
           <Card className="p-6 glass-card">
             <h2 className="flex items-center mb-4 text-xl font-semibold">
-              <User className="w-5 h-5 mr-2 text-success" />
-              Recent Activity
+              <Users className="w-5 h-5 mr-2 text-success" />
+              Identity Store
             </h2>
-            <p className="text-gray-600">No recent activity to display.</p>
+            <div className="space-y-4">
+              {Array.from(identityStore.values()).length > 0 ? (
+                Array.from(identityStore.values()).map((identity) => (
+                  <div key={identity.email} className="p-4 border rounded-lg">
+                    <p className="font-semibold">{identity.fullName}</p>
+                    <p className="text-sm text-gray-600">{identity.email}</p>
+                    <p className="text-sm text-gray-600">{identity.department}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Added: {identity.createdAt.toLocaleDateString()}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-600">No approved identities yet.</p>
+              )}
+            </div>
           </Card>
         </div>
       </div>
