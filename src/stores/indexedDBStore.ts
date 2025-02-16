@@ -368,10 +368,21 @@ export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
   try {
     console.log('Attempting to save OpenLDAP config:', { ...config, bindPassword: '***' });
     
-    // Validate required fields
-    if (!config.url || !config.bindDN || !config.bindPassword || !config.baseDN || !config.userContainer) {
-      console.error('Validation failed: Missing required fields');
-      throw new Error('All fields are required');
+    // Validate each field individually for better error messages
+    if (!config.url.trim()) {
+      throw new Error('Server URL is required');
+    }
+    if (!config.bindDN.trim()) {
+      throw new Error('Bind DN is required');
+    }
+    if (!config.bindPassword.trim()) {
+      throw new Error('Bind Password is required');
+    }
+    if (!config.baseDN.trim()) {
+      throw new Error('Base DN is required');
+    }
+    if (!config.userContainer.trim()) {
+      throw new Error('User Container is required');
     }
 
     console.log('Starting IndexedDB transaction');
@@ -381,11 +392,11 @@ export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
     // Save the complete config object
     const configToSave = {
       enabled: config.enabled,
-      url: config.url,
-      bindDN: config.bindDN,
-      bindPassword: config.bindPassword,
-      baseDN: config.baseDN,
-      userContainer: config.userContainer,
+      url: config.url.trim(),
+      bindDN: config.bindDN.trim(),
+      bindPassword: config.bindPassword.trim(),
+      baseDN: config.baseDN.trim(),
+      userContainer: config.userContainer.trim(),
     };
     console.log('Saving config to IndexedDB:', { ...configToSave, bindPassword: '***' });
     
@@ -395,13 +406,13 @@ export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
     await tx.done;
     console.log('Transaction completed');
     
-    await addLog('INFO', 'OpenLDAP configuration updated', { config: { ...config, bindPassword: '***' } });
+    await addLog('INFO', 'OpenLDAP configuration updated', { config: { ...configToSave, bindPassword: '***' } });
     toast.success('OpenLDAP configuration saved successfully');
     console.log('Save operation completed successfully');
   } catch (error) {
     console.error('Error saving OpenLDAP config:', error);
     await addLog('ERROR', 'Failed to save OpenLDAP configuration', { error: error.message });
-    toast.error('Failed to save OpenLDAP configuration');
+    toast.error(error.message || 'Failed to save OpenLDAP configuration');
     throw error;
   }
 };
