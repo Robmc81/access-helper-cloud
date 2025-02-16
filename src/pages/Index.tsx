@@ -48,7 +48,7 @@ const Index = () => {
       department: values.department,
       status: 'pending' as const,
       timestamp: new Date(),
-      type: isGuest ? 'guest' : 'regular',
+      type: isGuest ? 'guest' as const : 'regular' as const,
     };
     
     try {
