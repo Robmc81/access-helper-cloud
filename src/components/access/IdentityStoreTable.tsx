@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getAllFromIndexedDB } from "@/stores/indexedDBStore";
+import { formatInTimeZone } from 'date-fns-tz';
 
 interface Identity {
   email: string;
@@ -23,6 +24,14 @@ export const IdentityStoreTable = () => {
     loadIdentities();
   }, []);
 
+  const formatDateTime = (date: Date) => {
+    return formatInTimeZone(
+      new Date(date),
+      'America/New_York',
+      'MMM d, yyyy h:mm:ss a zzz'
+    );
+  };
+
   return (
     <Card className="p-6 glass-card">
       <h2 className="flex items-center mb-4 text-xl font-semibold">
@@ -35,7 +44,7 @@ export const IdentityStoreTable = () => {
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Name</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Department</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Added</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Added (ET)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -51,7 +60,7 @@ export const IdentityStoreTable = () => {
                   {identity.department}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-500">
-                  {new Date(identity.createdAt).toLocaleDateString()}
+                  {formatDateTime(identity.createdAt)}
                 </td>
               </tr>
             ))}
