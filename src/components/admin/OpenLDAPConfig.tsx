@@ -19,13 +19,14 @@ export const OpenLDAPConfig = () => {
   });
   const [open, setOpen] = useState(false);
 
+  const loadConfig = async () => {
+    const savedConfig = await getOpenLDAPConfig();
+    if (savedConfig) {
+      setConfig(savedConfig);
+    }
+  };
+
   useEffect(() => {
-    const loadConfig = async () => {
-      const savedConfig = await getOpenLDAPConfig();
-      if (savedConfig) {
-        setConfig(savedConfig);
-      }
-    };
     loadConfig();
   }, []);
 
