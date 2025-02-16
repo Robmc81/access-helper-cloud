@@ -1,20 +1,20 @@
 
 # Build stage
-FROM node:20-alpine as builder
+FROM oven/bun:1 as builder
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package.json package-lock.json ./
+# Copy package.json
+COPY package.json ./
 
 # Install dependencies
-RUN npm ci
+RUN bun install
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN bun run build
 
 # Production stage
 FROM nginx:alpine
