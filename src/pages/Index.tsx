@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, UserPlus, Users, Clock } from "lucide-react";
+import { User, UserPlus, Users, Clock, AppWindow, UserGroup } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
@@ -73,15 +73,33 @@ const Index = () => {
         </h1>
       </div>
       <div className="container px-4 py-16 mx-auto">
-        <div className="text-center animate-fadeIn">
+        <div className="flex flex-col items-center gap-4 animate-fadeIn sm:flex-row sm:justify-center">
           <Button
             size="lg"
-            className="animate-fadeIn hover-scale"
+            className="w-full animate-fadeIn hover-scale sm:w-auto"
             onClick={() => setShowDialog(true)}
             disabled={isRequestingAccess}
           >
             <UserPlus className="w-5 h-5 mr-2" />
             Request New Account
+          </Button>
+          <Button
+            size="lg"
+            variant="secondary"
+            className="w-full animate-fadeIn hover-scale sm:w-auto"
+            onClick={() => navigate("/catalog")}
+          >
+            <AppWindow className="w-5 h-5 mr-2" />
+            Request Application Access
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="w-full animate-fadeIn hover-scale sm:w-auto"
+            onClick={() => navigate("/groups")}
+          >
+            <UserGroup className="w-5 h-5 mr-2" />
+            Request Group Access
           </Button>
         </div>
 
