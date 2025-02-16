@@ -17,30 +17,45 @@ import { Info, RefreshCw, Edit2, Check, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export const LogicAppsConfig = () => {
   const [testing, setTesting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [protocol, setProtocol] = useState("http");
-  const [hostAddress, setHostAddress] = useState("localhost:3000");
-  const [path, setPath] = useState("/api/provision");
-
-  const fullEndpointUrl = `${protocol}://${hostAddress}${path}`;
+  const [workflowUrl, setWorkflowUrl] = useState("");
 
   const testWorkflow = async () => {
+    if (!workflowUrl) {
+      toast.error("Please configure the workflow URL first");
+      return;
+    }
+
     setTesting(true);
     try {
-      // Simulate testing the workflow
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Test payload
+      const testPayload = {
+        email: "test@example.com",
+        fullName: "Test User",
+        department: "IT",
+        source: "logic_apps"
+      };
+
+      const response = await fetch(workflowUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testPayload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Logic Apps test response:", data);
       toast.success("Logic Apps workflow test successful");
     } catch (error) {
+      console.error("Logic Apps test error:", error);
       toast.error("Failed to test Logic Apps workflow");
     } finally {
       setTesting(false);
@@ -48,16 +63,16 @@ export const LogicAppsConfig = () => {
   };
 
   const handleSaveEndpoint = () => {
-    if (!hostAddress) {
-      toast.error("Host address cannot be empty");
+    if (!workflowUrl) {
+      toast.error("Workflow URL cannot be empty");
       return;
     }
     try {
-      new URL(fullEndpointUrl); // Validate URL format
+      new URL(workflowUrl); // Validate URL format
       setIsEditing(false);
-      toast.success("Endpoint URL updated successfully");
+      toast.success("Logic Apps workflow URL updated successfully");
     } catch (e) {
-      toast.error("Please enter a valid host address");
+      toast.error("Please enter a valid workflow URL");
     }
   };
 
@@ -72,39 +87,19 @@ export const LogicAppsConfig = () => {
       <CardContent className="space-y-6">
         {/* Configuration Section */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Endpoint Configuration</h3>
+          <h3 className="text-lg font-semibold">Workflow Configuration</h3>
           <p className="text-sm text-gray-600">
-            Configure the endpoint for your DDIL server to receive provisioning requests:
+            Configure the Logic Apps workflow endpoint to receive provisioning requests:
           </p>
           <div className="relative">
             {isEditing ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Select
-                    value={protocol}
-                    onValueChange={setProtocol}
-                  >
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="http">HTTP</SelectItem>
-                      <SelectItem value="https">HTTPS</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <Input
-                    value={hostAddress}
-                    onChange={(e) => setHostAddress(e.target.value)}
+                    value={workflowUrl}
+                    onChange={(e) => setWorkflowUrl(e.target.value)}
                     className="flex-1"
-                    placeholder="Enter IP address or hostname (e.g., 192.168.1.100:3000)"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={path}
-                    onChange={(e) => setPath(e.target.value)}
-                    className="flex-1"
-                    placeholder="API path (e.g., /api/provision)"
+                    placeholder="Enter Logic Apps workflow URL"
                   />
                   <Button
                     variant="ghost"
@@ -126,8 +121,8 @@ export const LogicAppsConfig = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <code className="block bg-gray-100 p-3 rounded-md text-sm flex-1">
-                  {fullEndpointUrl}
+                <code className="block bg-gray-100 p-3 rounded-md text-sm flex-1 break-all">
+                  {workflowUrl || "No workflow URL configured"}
                 </code>
                 <Button
                   variant="ghost"
@@ -142,7 +137,7 @@ export const LogicAppsConfig = () => {
           </div>
           <Button 
             onClick={testWorkflow}
-            disabled={testing}
+            disabled={testing || !workflowUrl}
             className="w-full sm:w-auto"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${testing ? 'animate-spin' : ''}`} />
@@ -164,9 +159,9 @@ export const LogicAppsConfig = () => {
                 <ol className="list-decimal list-inside space-y-2">
                   <li>Open Microsoft Logic Apps in Azure Portal</li>
                   <li>Create a new workflow or edit existing one</li>
-                  <li>Add an HTTP action to your workflow</li>
-                  <li>Configure the HTTP action with the endpoint URL shown above</li>
-                  <li>Set the method to POST</li>
+                  <li>Add an HTTP trigger as the starting point</li>
+                  <li>Copy the HTTP POST URL from the trigger</li>
+                  <li>Paste the URL in the configuration above</li>
                 </ol>
               </AccordionContent>
             </AccordionItem>
@@ -174,17 +169,17 @@ export const LogicAppsConfig = () => {
             <AccordionItem value="payload">
               <AccordionTrigger>Request Payload Format</AccordionTrigger>
               <AccordionContent>
-                <p className="mb-2">For single user provisioning:</p>
+                <p className="mb-2">Single user provisioning payload:</p>
                 <pre className="bg-gray-100 p-3 rounded-md text-sm overflow-x-auto">
 {JSON.stringify({
   email: "user@example.com",
   fullName: "John Doe",
   department: "IT",
-  source: "logic_apps" // optional
+  source: "logic_apps"
 }, null, 2)}
                 </pre>
                 
-                <p className="mt-4 mb-2">For bulk user provisioning:</p>
+                <p className="mt-4 mb-2">Bulk user provisioning payload:</p>
                 <pre className="bg-gray-100 p-3 rounded-md text-sm overflow-x-auto">
 {JSON.stringify({
   users: [
