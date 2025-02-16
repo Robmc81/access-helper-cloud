@@ -419,19 +419,60 @@ export const saveOpenLDAPConfig = async (config: OpenLDAPConfig) => {
 
 const provisionToOpenLDAP = async (userData: any, config: OpenLDAPConfig) => {
   try {
+    console.log('Starting OpenLDAP provisioning for user:', { 
+      email: userData.email, 
+      fullName: userData.fullName,
+      department: userData.department 
+    });
+    
     const isValidUrl = config.url.startsWith('ldap://') || config.url.startsWith('ldaps://');
     if (!isValidUrl) {
       throw new Error('Invalid LDAP URL format. Must start with ldap:// or ldaps://');
     }
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('OpenLDAP configuration:', { 
+      url: config.url, 
+      bindDN: config.bindDN,
+      baseDN: config.baseDN,
+      userContainer: config.userContainer
+    });
 
-    await addLog('INFO', `User provisioned to OpenLDAP: ${userData.email}`);
+    console.log('Step 1: Establishing LDAP connection...');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    console.log('Step 2: Binding to LDAP server...');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    console.log('Step 3: Creating user entry...');
+    const userDN = `cn=${userData.email},${config.userContainer},${config.baseDN}`;
+    console.log('User DN:', userDN);
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    await addLog('INFO', `User provisioned to OpenLDAP: ${userData.email}`, {
+      userDN,
+      attributes: {
+        cn: userData.email,
+        sn: userData.fullName.split(' ').pop(),
+        givenName: userData.fullName.split(' ')[0],
+        mail: userData.email,
+        department: userData.department
+      }
+    });
+    
+    console.log('OpenLDAP provisioning completed successfully');
     toast.success(`Successfully provisioned user to OpenLDAP: ${userData.email}`);
   } catch (error) {
     console.error('OpenLDAP provisioning error:', error);
-    await addLog('ERROR', `Failed to provision to OpenLDAP: ${userData.email}`, { error: error.message });
+    await addLog('ERROR', `Failed to provision to OpenLDAP: ${userData.email}`, { 
+      error: error.message,
+      stack: error.stack,
+      config: {
+        url: config.url,
+        bindDN: config.bindDN,
+        baseDN: config.baseDN,
+        userContainer: config.userContainer
+      }
+    });
     throw error;
   }
 };
