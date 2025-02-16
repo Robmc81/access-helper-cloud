@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, UserPlus, Users, Clock, AppWindow, UserGroup } from "lucide-react";
+import { User, UserPlus, Users, Clock, AppWindow, Group } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
@@ -98,7 +98,7 @@ const Index = () => {
             className="w-full animate-fadeIn hover-scale sm:w-auto"
             onClick={() => navigate("/groups")}
           >
-            <UserGroup className="w-5 h-5 mr-2" />
+            <Group className="w-5 h-5 mr-2" />
             Request Group Access
           </Button>
         </div>
