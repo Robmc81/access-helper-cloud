@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, UserPlus, Users } from "lucide-react";
+import { User, UserPlus, Users, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { RequestAccessDialog, formSchema } from "@/components/access/RequestAccessDialog";
 import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
@@ -10,6 +11,13 @@ import { accessRequests } from "@/stores/accessStore";
 import * as z from "zod";
 
 const features = [
+  {
+    icon: Clock,
+    title: "Pending Requests",
+    description:
+      "View and manage all pending access requests awaiting approval.",
+    route: "/dashboard",
+  },
   {
     icon: User,
     title: "Access Request",
@@ -45,20 +53,11 @@ const Index = () => {
     
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
-    toast.success("Access request submitted successfully! Awaiting approval.");
+    toast.success("Access request submitted successfully! Check pending requests for status.");
     setShowDialog(false);
-    console.log("Current access requests:", Array.from(accessRequests.entries()));
+    setIsRequestingAccess(false);
     
-    setTimeout(() => {
-      setIsRequestingAccess(false);
-      navigate("/dashboard", { 
-        state: { 
-          requestId,
-          email: values.email,
-          status: 'pending'
-        } 
-      });
-    }, 1000);
+    console.log("Current access requests:", Array.from(accessRequests.entries()));
   };
 
   return (
