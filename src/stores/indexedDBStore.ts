@@ -13,8 +13,6 @@ declare global {
   interface FileSystemDirectoryHandle {
     requestPermission: (descriptor: { mode: 'read' | 'readwrite' }) => Promise<PermissionState>;
   }
-
-  type PermissionState = 'granted' | 'denied' | 'prompt';
 }
 
 const DB_NAME = 'ocgDDIL';
