@@ -91,7 +91,34 @@ export const LogicAppsConfig = () => {
     }
   };
 
-  const saveWorkflowUrl = (url: string): Promise<boolean> => {
+  const validateSavedUrl = async () => {
+    if (!db) return false;
+    
+    try {
+      const transaction = db.transaction('systemConfig', 'readonly');
+      const store = transaction.objectStore('systemConfig');
+      const request = store.get('workflowUrl');
+      
+      return new Promise<boolean>((resolve) => {
+        request.onsuccess = () => {
+          const savedUrl = request.result;
+          if (savedUrl && savedUrl === workflowUrl) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        };
+        
+        request.onerror = () => {
+          resolve(false);
+        };
+      });
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const saveWorkflowUrl = async (url: string): Promise<boolean> => {
     return new Promise((resolve, reject) => {
       if (!db) {
         toast.error("Database not initialized");
@@ -103,12 +130,20 @@ export const LogicAppsConfig = () => {
         const transaction = db.transaction('systemConfig', 'readwrite');
         const store = transaction.objectStore('systemConfig');
         
-        transaction.oncomplete = () => {
+        transaction.oncomplete = async () => {
           console.log("Transaction completed successfully");
-          toast.success("Workflow URL saved and configuration updated", {
-            description: "Your changes have been saved successfully."
-          });
-          resolve(true);
+          const isValidated = await validateSavedUrl();
+          
+          if (isValidated) {
+            await addLog("INFO", "Logic Apps workflow URL saved and validated", { url });
+            toast.success("Workflow URL saved successfully", {
+              description: "URL was saved and validated in the database."
+            });
+          } else {
+            await addLog("WARN", "Logic Apps workflow URL save validation failed", { url });
+            toast.error("URL save validation failed");
+          }
+          resolve(isValidated);
         };
         
         transaction.onerror = () => {
@@ -120,7 +155,7 @@ export const LogicAppsConfig = () => {
         
         request.onsuccess = async () => {
           console.log("Put operation successful");
-          await addLog("INFO", "Logic Apps workflow URL updated", { url });
+          await addLog("INFO", "Logic Apps workflow URL update initiated", { url });
         };
 
         request.onerror = async () => {
@@ -139,6 +174,7 @@ export const LogicAppsConfig = () => {
   const handleSaveEndpoint = async () => {
     if (!workflowUrl) {
       toast.error("Workflow URL cannot be empty");
+      await addLog("WARN", "Attempted to save empty workflow URL");
       return;
     }
 
@@ -150,7 +186,8 @@ export const LogicAppsConfig = () => {
       }
     } catch (error) {
       console.error("Error saving workflow URL:", error);
-      toast.error("Failed to save workflow URL");
+      await addLog("ERROR", "Invalid workflow URL format", { url: workflowUrl });
+      toast.error("Invalid URL format");
     }
   };
 
