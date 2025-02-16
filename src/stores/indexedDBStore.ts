@@ -7,12 +7,14 @@ const DB_VERSION = 1;
 
 const db = await openDB(DB_NAME, DB_VERSION, {
   upgrade(db) {
-    // Create stores
     if (!db.objectStoreNames.contains('accessRequests')) {
       db.createObjectStore('accessRequests', { keyPath: 'id' });
     }
     if (!db.objectStoreNames.contains('identityStore')) {
       db.createObjectStore('identityStore', { keyPath: 'email' });
+    }
+    if (!db.objectStoreNames.contains('syncStore')) {
+      db.createObjectStore('syncStore', { keyPath: 'id' });
     }
   },
 });
@@ -52,6 +54,29 @@ export const exportData = async () => {
       exportDate: new Date().toISOString(),
     };
     
+    // Try to use File System Access API if available
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: `ocg-ddil-backup-${new Date().toISOString()}.json`,
+          types: [{
+            description: 'JSON File',
+            accept: { 'application/json': ['.json'] },
+          }],
+        });
+        
+        const writable = await handle.createWritable();
+        await writable.write(JSON.stringify(exportData, null, 2));
+        await writable.close();
+        
+        toast.success('Data exported successfully using File System Access API');
+        return;
+      } catch (error) {
+        console.warn('File System Access API failed, falling back to download:', error);
+      }
+    }
+    
+    // Fallback to traditional download
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -93,5 +118,39 @@ export const importData = async (file: File) => {
   } catch (error) {
     console.error('Import error:', error);
     toast.error('Failed to import data');
+  }
+};
+
+// Add auto-backup functionality
+export const scheduleAutoBackup = async () => {
+  try {
+    if ('showDirectoryPicker' in window) {
+      const dirHandle = await window.showDirectoryPicker();
+      localStorage.setItem('autoBackupEnabled', 'true');
+      
+      // Store the directory handle
+      const grantPermission = await dirHandle.requestPermission({ mode: 'readwrite' });
+      if (grantPermission === 'granted') {
+        // Create auto-backup
+        const backupData = {
+          accessRequests: await getAllFromIndexedDB('accessRequests'),
+          identityStore: await getAllFromIndexedDB('identityStore'),
+          exportDate: new Date().toISOString(),
+        };
+        
+        const fileName = `ocg-ddil-auto-backup-${new Date().toISOString()}.json`;
+        const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(JSON.stringify(backupData, null, 2));
+        await writable.close();
+        
+        toast.success('Auto-backup location set and initial backup created');
+      }
+    } else {
+      toast.error('File System Access API is not supported in this browser');
+    }
+  } catch (error) {
+    console.error('Auto-backup error:', error);
+    toast.error('Failed to set up auto-backup');
   }
 };
