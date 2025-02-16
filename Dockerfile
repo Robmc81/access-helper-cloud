@@ -8,7 +8,7 @@ WORKDIR /app
 RUN corepack enable && \
     corepack prepare yarn@stable --activate
 
-# Copy package.json first
+# Copy only package.json
 COPY package.json ./
 
 # Initialize yarn and install dependencies
