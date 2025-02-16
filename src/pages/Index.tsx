@@ -11,6 +11,13 @@ import { accessRequests } from "@/stores/accessStore";
 import { saveToIndexedDB } from "@/stores/indexedDBStore";
 import * as z from "zod";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { groups } from "@/stores/groupStore";
 
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
@@ -62,6 +69,13 @@ const Index = () => {
     setShowDialog(true);
   };
 
+  const handleGroupRequest = (groupId: string) => {
+    const group = groups.get(groupId);
+    if (group) {
+      toast.success(`Request submitted for ${group.name} group access`);
+    }
+  };
+
   const features = [
     {
       icon: Clock,
@@ -84,6 +98,13 @@ const Index = () => {
       description:
         "Centralized identity store with powerful search capabilities for efficient user management.",
       route: "/identities",
+    },
+    {
+      icon: Group,
+      title: "Groups",
+      description:
+        "View and manage access groups and their members.",
+      route: "/groups",
     },
   ];
 
@@ -139,14 +160,29 @@ const Index = () => {
               <AppWindow className="w-5 h-5 mr-2" />
               Request Application Access
             </Button>
-            <Button
-              size="lg"
-              className="w-full animate-fadeIn hover-scale sm:w-auto"
-              onClick={() => navigate("/groups")}
-            >
-              <Group className="w-5 h-5 mr-2" />
-              Request Group Access
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="lg"
+                  className="w-full animate-fadeIn hover-scale sm:w-auto"
+                >
+                  <Group className="w-5 h-5 mr-2" />
+                  Request Group Access
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {Array.from(groups.entries()).map(([id, group]) => (
+                  <DropdownMenuItem
+                    key={id}
+                    onClick={() => handleGroupRequest(id)}
+                    className="flex items-center gap-2"
+                  >
+                    <Users className="w-4 h-4" />
+                    <span>{group.name}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
