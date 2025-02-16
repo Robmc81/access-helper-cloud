@@ -1,3 +1,4 @@
+
 import { openDB } from 'idb';
 import { toast } from "sonner";
 
@@ -16,10 +17,11 @@ declare global {
 }
 
 const DB_NAME = 'ocgDDIL';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incrementing version to force upgrade
 
 const db = await openDB(DB_NAME, DB_VERSION, {
-  upgrade(db) {
+  async upgrade(db, oldVersion, newVersion) {
+    // Create stores if they don't exist
     if (!db.objectStoreNames.contains('accessRequests')) {
       db.createObjectStore('accessRequests', { keyPath: 'id' });
     }
@@ -30,11 +32,22 @@ const db = await openDB(DB_NAME, DB_VERSION, {
       db.createObjectStore('syncStore', { keyPath: 'id' });
     }
     if (!db.objectStoreNames.contains('systemLogs')) {
-      db.createObjectStore('systemLogs', { keyPath: 'id' });
+      db.createObjectStore('systemLogs', { keyPath: 'id', autoIncrement: true });
     }
     if (!db.objectStoreNames.contains('systemConfig')) {
       db.createObjectStore('systemConfig');
     }
+
+    // Verify all stores exist
+    const stores = ['accessRequests', 'identityStore', 'syncStore', 'systemLogs', 'systemConfig'];
+    for (const store of stores) {
+      if (!db.objectStoreNames.contains(store)) {
+        console.error(`Failed to create store: ${store}`);
+        throw new Error(`Failed to create store: ${store}`);
+      }
+    }
+
+    console.info('All IndexedDB stores initialized successfully');
   },
 });
 
