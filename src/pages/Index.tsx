@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -42,6 +41,11 @@ const Index = () => {
       department: "",
     },
   });
+
+  const openDialog = (type: 'regular' | 'guest') => {
+    setDialogType(type);
+    setShowDialog(true);
+  };
 
   useEffect(() => {
     const count = Array.from(accessRequests.values()).filter(
