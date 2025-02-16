@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, UserPlus, Lock, Search, Workflow } from "lucide-react";
+import { User, UserPlus, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -55,7 +55,7 @@ const Index = () => {
           </Button>
         </div>
 
-        <div className="grid gap-8 mt-24 md:grid-cols-3">
+        <div className="grid gap-8 mt-24 md:grid-cols-1">
           {features.map((feature, index) => (
             <Card
               key={feature.title}
@@ -83,20 +83,6 @@ const features = [
     description:
       "Centralized identity store with powerful search capabilities for efficient user management.",
     route: "/dashboard",
-  },
-  {
-    icon: Workflow,
-    title: "Workflow Automation",
-    description:
-      "Streamline access requests with automated approval workflows and notifications.",
-    route: "/dashboard",
-  },
-  {
-    icon: Search,
-    title: "Quick Search",
-    description:
-      "Find and manage user entitlements quickly with our advanced search functionality.",
-    route: "/catalog",
   },
 ];
 
