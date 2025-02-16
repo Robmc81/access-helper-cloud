@@ -1,13 +1,28 @@
 
 // Load initial data from localStorage if available
 const loadStoredData = <T>(key: string): Map<string, T> => {
-  const storedData = localStorage.getItem(key);
-  return storedData ? new Map(JSON.parse(storedData)) : new Map();
+  try {
+    const storedData = localStorage.getItem(key);
+    if (!storedData) return new Map();
+
+    const parsedData = JSON.parse(storedData);
+    // Ensure the parsed data is an array of entries
+    if (!Array.isArray(parsedData)) return new Map();
+
+    return new Map(parsedData);
+  } catch (error) {
+    console.error(`Error loading data for ${key}:`, error);
+    return new Map();
+  }
 };
 
 // Save data to localStorage
 const saveData = (key: string, data: Map<any, any>) => {
-  localStorage.setItem(key, JSON.stringify(Array.from(data.entries())));
+  try {
+    localStorage.setItem(key, JSON.stringify(Array.from(data.entries())));
+  } catch (error) {
+    console.error(`Error saving data for ${key}:`, error);
+  }
 };
 
 // Initialize stores with data from localStorage
@@ -43,18 +58,22 @@ identityStore.set = function(key, value) {
   return result;
 };
 
-// Convert stored date strings back to Date objects
+// Convert stored date strings back to Date objects immediately after loading
 for (const [key, value] of accessRequests.entries()) {
-  accessRequests.set(key, {
-    ...value,
-    timestamp: new Date(value.timestamp),
-    approvedAt: value.approvedAt ? new Date(value.approvedAt) : undefined
-  });
+  if (!(value.timestamp instanceof Date)) {
+    accessRequests.set(key, {
+      ...value,
+      timestamp: new Date(value.timestamp),
+      approvedAt: value.approvedAt ? new Date(value.approvedAt) : undefined
+    });
+  }
 }
 
 for (const [key, value] of identityStore.entries()) {
-  identityStore.set(key, {
-    ...value,
-    createdAt: new Date(value.createdAt)
-  });
+  if (!(value.createdAt instanceof Date)) {
+    identityStore.set(key, {
+      ...value,
+      createdAt: new Date(value.createdAt)
+    });
+  }
 }
