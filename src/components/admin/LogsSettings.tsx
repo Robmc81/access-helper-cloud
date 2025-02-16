@@ -2,14 +2,17 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Terminal, Download, RefreshCw } from "lucide-react";
+import { Terminal, Download, RefreshCw, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { SystemLog, getLogs } from "@/stores/indexedDBStore";
+import { Input } from "@/components/ui/input";
 
 export const LogsSettings = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [logs, setLogs] = useState<SystemLog[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredLogs, setFilteredLogs] = useState<SystemLog[]>([]);
 
   const fetchLogs = async () => {
     const fetchedLogs = await getLogs();
@@ -19,6 +22,18 @@ export const LogsSettings = () => {
   useEffect(() => {
     fetchLogs();
   }, []);
+
+  useEffect(() => {
+    const filtered = logs.filter((log) => {
+      const searchStr = searchQuery.toLowerCase();
+      return (
+        log.message.toLowerCase().includes(searchStr) ||
+        log.level.toLowerCase().includes(searchStr) ||
+        (log.details && JSON.stringify(log.details).toLowerCase().includes(searchStr))
+      );
+    });
+    setFilteredLogs(filtered);
+  }, [searchQuery, logs]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -73,10 +88,21 @@ export const LogsSettings = () => {
           </Button>
         </div>
       </div>
+
+      <div className="flex items-center gap-2 mb-4">
+        <Search className="w-4 h-4 text-gray-500" />
+        <Input
+          type="text"
+          placeholder="Search logs..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full"
+        />
+      </div>
       
       <ScrollArea className="h-[300px] rounded-md border">
         <div className="p-4 space-y-2 font-mono text-sm">
-          {logs.map((log) => (
+          {filteredLogs.map((log) => (
             <div
               key={log.id}
               className={`${
