@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,7 +12,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Info, RefreshCw, Edit2, Check, X } from "lucide-react";
+import { Info, RefreshCw, Edit2, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -229,20 +228,11 @@ export const LogicAppsConfig = () => {
                     placeholder="Enter Logic Apps workflow URL"
                   />
                   <Button
-                    variant="ghost"
-                    size="icon"
                     onClick={handleSaveEndpoint}
-                    className="h-10 w-10"
+                    className="flex items-center gap-2"
                   >
-                    <Check className="h-4 w-4 text-green-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsEditing(false)}
-                    className="h-10 w-10"
-                  >
-                    <X className="h-4 w-4 text-red-500" />
+                    <Save className="h-4 w-4" />
+                    Save
                   </Button>
                 </div>
               </div>
