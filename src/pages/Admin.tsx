@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { BackupRestore } from "@/components/admin/BackupRestore";
 import { ConnectorSettings } from "@/components/admin/ConnectorSettings";
 import { LogicAppsConfig } from "@/components/admin/LogicAppsConfig";
-import { LogsSettings } from "@/components/admin/LogsSettings";
+import { LogsCard } from "@/components/admin/LogsCard";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const Admin = () => {
         <div className="space-y-6">
           <LogicAppsConfig />
           <ConnectorSettings />
-          <LogsSettings />
+          <LogsCard />
           <BackupRestore />
         </div>
       </div>
