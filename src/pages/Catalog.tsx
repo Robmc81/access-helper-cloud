@@ -1,13 +1,25 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Lock } from "lucide-react";
+import { Search, Lock, Home } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 
 const Catalog = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen p-8 bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="container animate-fadeIn">
+        <Button
+          variant="ghost"
+          className="mb-6 hover-scale"
+          onClick={() => navigate("/")}
+        >
+          <Home className="w-4 h-4 mr-2" />
+          Back to Home
+        </Button>
+
         <h1 className="mb-8 text-3xl font-bold">Application Catalog</h1>
         
         <div className="flex items-center gap-4 mb-8">
