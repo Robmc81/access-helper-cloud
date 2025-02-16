@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,10 +17,13 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { groups } from "@/stores/groupStore";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
@@ -28,7 +32,16 @@ const Index = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [isRequestingForOther, setIsRequestingForOther] = useState(false);
   const navigate = useNavigate();
+
+  const form = useForm({
+    defaultValues: {
+      fullName: "",
+      email: "",
+      department: "",
+    },
+  });
 
   useEffect(() => {
     const count = Array.from(accessRequests.values()).filter(
@@ -66,33 +79,51 @@ const Index = () => {
     setIsRequestingAccess(false);
   };
 
-  const openDialog = (type: 'regular' | 'guest') => {
-    setDialogType(type);
-    setShowDialog(true);
-  };
-
-  const handleGroupRequest = (groupId: string) => {
+  const handleGroupRequest = async (groupId: string) => {
     const group = groups.get(groupId);
     if (group) {
       const requestId = crypto.randomUUID();
-      const requestData = {
-        id: requestId,
-        fullName: "Current User",
-        email: "user@example.com",
-        department: "Unknown",
-        status: 'pending' as const,
-        timestamp: new Date(),
-        type: 'group' as const,
-        groupId: groupId,
-        groupName: group.name
-      };
+      let requestData;
+
+      if (isRequestingForOther) {
+        const values = form.getValues();
+        if (!values.fullName || !values.email || !values.department) {
+          toast.error("Please fill in all user details");
+          return;
+        }
+        requestData = {
+          id: requestId,
+          fullName: values.fullName,
+          email: values.email,
+          department: values.department,
+          status: 'pending' as const,
+          timestamp: new Date(),
+          type: 'group' as const,
+          groupId: groupId,
+          groupName: group.name
+        };
+      } else {
+        requestData = {
+          id: requestId,
+          fullName: "Current User",
+          email: "user@example.com",
+          department: "Unknown",
+          status: 'pending' as const,
+          timestamp: new Date(),
+          type: 'group' as const,
+          groupId: groupId,
+          groupName: group.name
+        };
+      }
       
       try {
         accessRequests.set(requestId, requestData);
-        saveToIndexedDB('accessRequests', requestData);
+        await saveToIndexedDB('accessRequests', requestData);
         setPendingCount(prev => prev + 1);
         toast.success(`Request submitted for ${group.name} group access`);
         setSheetOpen(false);
+        setIsRequestingForOther(false);
+        form.reset();
       } catch (error) {
         console.error('Error saving group access request:', error);
         toast.error('Failed to save group access request');
@@ -199,10 +230,68 @@ const Index = () => {
                   Request Group Access
                 </Button>
               </SheetTrigger>
+              <SheetTrigger asChild>
+                <Button
+                  size="lg"
+                  className="w-full animate-fadeIn hover-scale sm:w-auto"
+                  onClick={() => setIsRequestingForOther(true)}
+                >
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Request Group Access for Another User
+                </Button>
+              </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Request Group Access</SheetTitle>
+                  <SheetTitle>
+                    {isRequestingForOther 
+                      ? "Request Group Access for Another User"
+                      : "Request Group Access"}
+                  </SheetTitle>
                 </SheetHeader>
+                {isRequestingForOther && (
+                  <div className="py-4">
+                    <Form {...form}>
+                      <form className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="fullName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Full Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="John Doe" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input placeholder="john@example.com" type="email" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="department"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Department</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Engineering" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </form>
+                    </Form>
+                  </div>
+                )}
                 <div className="py-6">
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -235,6 +324,17 @@ const Index = () => {
                     ))}
                   </div>
                 </ScrollArea>
+                <SheetFooter className="mt-4">
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setIsRequestingForOther(false);
+                      form.reset();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </SheetFooter>
               </SheetContent>
             </Sheet>
           </div>
