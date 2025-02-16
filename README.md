@@ -1,22 +1,15 @@
-# Welcome to your Lovable project
+
+# OCG DDIL Access Management
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/e98ad451-5b81-4781-ba6b-3dbf184d829a
-
 ## How can I edit this code?
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/e98ad451-5b81-4781-ba6b-3dbf184d829a) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
+There are several ways of editing your application:
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -52,7 +45,7 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with .
+This project is built with:
 
 - Vite
 - TypeScript
@@ -60,10 +53,10 @@ This project is built with .
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Deployment
 
-Simply open [Lovable](https://lovable.dev/projects/e98ad451-5b81-4781-ba6b-3dbf184d829a) and click on Share -> Publish.
+The application can be deployed using any standard hosting service that supports static site deployment (Netlify, Vercel, etc).
 
-## I want to use a custom domain - is that possible?
+## Custom Domains
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+To use a custom domain, deploy the application to a hosting service of your choice and configure the domain settings through their platform.
