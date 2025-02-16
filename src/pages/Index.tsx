@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -10,36 +10,22 @@ import { IdentityStoreTable } from "@/components/access/IdentityStoreTable";
 import { accessRequests } from "@/stores/accessStore";
 import { saveToIndexedDB } from "@/stores/indexedDBStore";
 import * as z from "zod";
-
-const features = [
-  {
-    icon: Clock,
-    title: "Pending Requests",
-    description:
-      "View and manage all pending access requests awaiting approval.",
-    route: "/dashboard",
-  },
-  {
-    icon: User,
-    title: "Access Request History",
-    description:
-      "View Access Request History",
-    route: "/dashboard",
-  },
-  {
-    icon: Users,
-    title: "Identity Store",
-    description:
-      "Centralized identity store with powerful search capabilities for efficient user management.",
-    route: "/identities",
-  },
-];
+import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const [isRequestingAccess, setIsRequestingAccess] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [dialogType, setDialogType] = useState<'regular' | 'guest'>('regular');
+  const [pendingCount, setPendingCount] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Count pending requests
+    const count = Array.from(accessRequests.values()).filter(
+      request => request.status === 'pending'
+    ).length;
+    setPendingCount(count);
+  }, []);
 
   const handleAccessRequest = async (values: z.infer<typeof formSchema>) => {
     const isGuest = dialogType === 'guest';
@@ -59,6 +45,7 @@ const Index = () => {
       // Save to both localStorage and IndexedDB
       accessRequests.set(requestId, requestData);
       await saveToIndexedDB('accessRequests', requestData);
+      setPendingCount(prev => prev + 1);
       
       toast.success(`${isGuest ? 'Guest access' : 'Access'} request submitted successfully! Check pending requests for status.`);
     } catch (error) {
@@ -74,6 +61,31 @@ const Index = () => {
     setDialogType(type);
     setShowDialog(true);
   };
+
+  const features = [
+    {
+      icon: Clock,
+      title: "Pending Requests",
+      description:
+        "View and manage all pending access requests awaiting approval.",
+      route: "/dashboard",
+      badge: pendingCount > 0 ? pendingCount : null,
+    },
+    {
+      icon: User,
+      title: "Access Request History",
+      description:
+        "View Access Request History",
+      route: "/dashboard",
+    },
+    {
+      icon: Users,
+      title: "Identity Store",
+      description:
+        "Centralized identity store with powerful search capabilities for efficient user management.",
+      route: "/identities",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -148,9 +160,18 @@ const Index = () => {
               }}
               onClick={() => navigate(feature.route)}
             >
-              <feature.icon className="w-12 h-12 p-2 mb-4 text-success bg-success/10 rounded-lg" />
-              <h3 className="mb-2 text-xl font-semibold">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <feature.icon className="w-12 h-12 p-2 mb-4 text-success bg-success/10 rounded-lg" />
+                  <h3 className="mb-2 text-xl font-semibold">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
+                </div>
+                {feature.badge && (
+                  <Badge variant="destructive" className="text-sm px-2 py-1">
+                    {feature.badge} pending
+                  </Badge>
+                )}
+              </div>
             </Card>
           ))}
         </div>
