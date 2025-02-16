@@ -5,6 +5,7 @@ import { User, Lock, Home, Check, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { accessRequests, identityStore } from "@/stores/accessStore";
 import { toast } from "sonner";
+import { useState } from "react";
 
 type RequestStatus = 'pending' | 'approved' | 'rejected';
 
@@ -12,54 +13,67 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { requestId, email } = location.state || {};
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleApproval = (id: string, approved: boolean) => {
-    if (!accessRequests.has(id)) {
-      toast.error("Access request not found");
-      return;
-    }
+    try {
+      if (!accessRequests.has(id)) {
+        toast.error("Access request not found");
+        return;
+      }
 
-    const request = accessRequests.get(id)!;
-    const newStatus: RequestStatus = approved ? 'approved' : 'rejected';
-    
-    // Update the request with new status and approval time
-    const updatedRequest = {
-      ...request,
-      status: newStatus,
-      approvedAt: new Date()
-    };
-    
-    accessRequests.set(id, updatedRequest);
-    
-    // If approved, add to identity store
-    if (approved) {
-      identityStore.set(request.email, {
-        fullName: request.fullName,
-        email: request.email,
-        department: request.department,
-        createdAt: new Date(),
-        requestId: id
-      });
+      const request = accessRequests.get(id)!;
+      const newStatus: RequestStatus = approved ? 'approved' : 'rejected';
       
-      toast.success("Access request approved and identity added to the system");
-    } else {
-      toast.success("Access request rejected");
+      // Create new request object with updated status
+      const updatedRequest = {
+        ...request,
+        status: newStatus,
+        approvedAt: new Date()
+      };
+      
+      // Update access request
+      accessRequests.set(id, updatedRequest);
+      
+      // If approved, add to identity store
+      if (approved) {
+        identityStore.set(request.email, {
+          fullName: request.fullName,
+          email: request.email,
+          department: request.department,
+          createdAt: new Date(),
+          requestId: id
+        });
+        
+        toast.success("Access request approved successfully");
+      } else {
+        toast.success("Access request rejected successfully");
+      }
+
+      // Force a re-render
+      setRefreshKey(prev => prev + 1);
+      
+    } catch (error) {
+      console.error("Error handling approval:", error);
+      toast.error("Failed to process request");
     }
-    
-    console.log("Updated access request:", Array.from(accessRequests.entries()));
   };
 
   // Get all pending requests
   const pendingRequests = Array.from(accessRequests.entries())
     .filter(([_, request]) => request.status === 'pending')
-    .sort((a, b) => b[1].timestamp.getTime() - a[1].timestamp.getTime());
+    .sort((a, b) => {
+      const timeA = new Date(b[1].timestamp).getTime();
+      const timeB = new Date(a[1].timestamp).getTime();
+      return timeA - timeB;
+    });
 
   // Get all processed requests (approved or rejected)
   const processedRequests = Array.from(accessRequests.entries())
     .filter(([_, request]) => request.status === 'approved' || request.status === 'rejected')
     .sort((a, b) => {
-      const timeA = b[1].approvedAt?.getTime() || b[1].timestamp.getTime();
-      const timeB = a[1].approvedAt?.getTime() || a[1].timestamp.getTime();
+      const timeA = b[1].approvedAt ? new Date(b[1].approvedAt).getTime() : new Date(b[1].timestamp).getTime();
+      const timeB = a[1].approvedAt ? new Date(a[1].approvedAt).getTime() : new Date(a[1].timestamp).getTime();
       return timeA - timeB;
     });
 
@@ -99,7 +113,7 @@ const Dashboard = () => {
                       <p className="text-gray-600">Email: {request.email}</p>
                       <p className="text-gray-600">Department: {request.department}</p>
                       <p className="text-gray-600">
-                        Submitted: {request.timestamp.toLocaleDateString()}
+                        Submitted: {new Date(request.timestamp).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="flex gap-2 mt-4">
@@ -148,11 +162,11 @@ const Dashboard = () => {
                         }`}>{request.status}</span>
                       </p>
                       <p className="text-gray-600">
-                        Submitted: {request.timestamp.toLocaleDateString()}
+                        Submitted: {new Date(request.timestamp).toLocaleDateString()}
                       </p>
                       {request.approvedAt && (
                         <p className="text-gray-600">
-                          {request.status === 'approved' ? 'Approved' : 'Rejected'}: {request.approvedAt.toLocaleDateString()}
+                          {request.status === 'approved' ? 'Approved' : 'Rejected'}: {new Date(request.approvedAt).toLocaleDateString()}
                         </p>
                       )}
                     </div>
