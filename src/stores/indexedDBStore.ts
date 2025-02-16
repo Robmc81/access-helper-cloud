@@ -9,6 +9,12 @@ declare global {
     }) => Promise<FileSystemFileHandle>;
     showDirectoryPicker: () => Promise<FileSystemDirectoryHandle>;
   }
+
+  interface FileSystemDirectoryHandle {
+    requestPermission: (descriptor: { mode: 'read' | 'readwrite' }) => Promise<PermissionState>;
+  }
+
+  type PermissionState = 'granted' | 'denied' | 'prompt';
 }
 
 const DB_NAME = 'ocgDDIL';
@@ -139,7 +145,7 @@ export const scheduleAutoBackup = async () => {
       const dirHandle = await window.showDirectoryPicker();
       localStorage.setItem('autoBackupEnabled', 'true');
       
-      const permission = await dirHandle.requestPermission({ mode: 'readwrite' }) as FileSystemPermissionStatus;
+      const permission = await dirHandle.requestPermission({ mode: 'readwrite' });
       
       if (permission === 'granted') {
         const backupData = {
