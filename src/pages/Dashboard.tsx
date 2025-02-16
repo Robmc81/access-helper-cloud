@@ -23,12 +23,13 @@ const Dashboard = () => {
     const newStatus = approved ? 'approved' : 'rejected';
     
     // Update the request with new status and approval time
-    accessRequests.set(requestId, {
+    const updatedRequest = {
       ...request,
       status: newStatus,
       approvedAt: approved ? new Date() : undefined
-    });
+    };
     
+    accessRequests.set(requestId, updatedRequest);
     setCurrentStatus(newStatus);
     
     // If approved, add to identity store
@@ -45,6 +46,9 @@ const Dashboard = () => {
     } else {
       toast.success("Access request rejected");
     }
+    
+    // Log to verify the update
+    console.log("Updated access request:", Array.from(accessRequests.entries()));
   };
 
   // Get all requests for the current email
