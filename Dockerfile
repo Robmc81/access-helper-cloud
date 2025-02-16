@@ -8,11 +8,11 @@ WORKDIR /app
 RUN corepack enable && \
     corepack prepare yarn@stable --activate
 
-# Copy package files
-COPY package*.json yarn.lock ./
+# Copy package.json first
+COPY package.json ./
 
-# Install dependencies using Yarn
-RUN yarn install --frozen-lockfile
+# Initialize yarn and install dependencies
+RUN yarn install
 
 # Copy source code
 COPY . .
