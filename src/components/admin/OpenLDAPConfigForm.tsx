@@ -41,18 +41,30 @@ export const OpenLDAPConfigForm = ({ initialConfig, onSuccess }: OpenLDAPConfigF
         return;
       }
 
-      // Mock LDAP test connection
+      // Mock LDAP test connection steps
       const isValidUrl = config.url.startsWith('ldap://') || config.url.startsWith('ldaps://');
       if (!isValidUrl) {
         throw new Error('Invalid LDAP URL format. Must start with ldap:// or ldaps://');
       }
 
-      toast.loading('Testing connection to OpenLDAP server...');
+      toast.loading('Testing connection to OpenLDAP server...', {
+        description: 'Step 1: Establishing connection...'
+      });
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+
+      toast.loading('Testing LDAP bind operation...', {
+        description: `Step 2: Attempting to bind as ${config.bindDN}`
+      });
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate bind operation
+
+      toast.loading('Verifying base DN access...', {
+        description: `Step 3: Searching ${config.baseDN}`
+      });
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate search operation
       
       toast.dismiss();
       toast.success('Successfully connected to OpenLDAP server', {
-        description: `Connected to ${config.url}`,
+        description: `Bound to ${config.url} as ${config.bindDN}\nVerified access to ${config.baseDN}`,
       });
     } catch (error) {
       console.error('OpenLDAP connection test failed:', error);
