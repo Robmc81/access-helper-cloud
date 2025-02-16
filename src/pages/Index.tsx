@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -106,7 +105,6 @@ const Index = () => {
             </Button>
             <Button
               size="lg"
-              variant="secondary"
               className="w-full animate-fadeIn hover-scale sm:w-auto"
               onClick={() => openDialog('guest')}
               disabled={isRequestingAccess}
