@@ -4,7 +4,6 @@ import { Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BackupRestore } from "@/components/admin/BackupRestore";
 import { ConnectorSettings } from "@/components/admin/ConnectorSettings";
-import { LogicAppsConfig } from "@/components/admin/LogicAppsConfig";
 import { LogsCard } from "@/components/admin/LogsCard";
 
 const Admin = () => {
@@ -27,7 +26,6 @@ const Admin = () => {
         </div>
 
         <div className="space-y-6">
-          <LogicAppsConfig />
           <ConnectorSettings />
           <LogsCard />
           <BackupRestore />
