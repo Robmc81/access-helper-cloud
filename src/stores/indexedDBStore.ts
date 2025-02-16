@@ -255,3 +255,71 @@ export const mergeSyncData = async (importedData: any) => {
   // Apply new records
   await applySyncRecords(newRecords);
 };
+
+// Function to provision a new identity
+export const provisionIdentity = async (userData: {
+  email: string;
+  fullName: string;
+  department: string;
+  source?: string;
+}) => {
+  try {
+    const identityData = {
+      ...userData,
+      createdAt: new Date(),
+      source: userData.source || 'logic_apps',
+      status: 'active',
+    };
+
+    const tx = db.transaction('identityStore', 'readwrite');
+    const store = tx.objectStore('identityStore');
+    
+    // Check if user already exists
+    const existingUser = await store.get(userData.email);
+    if (existingUser) {
+      // Update existing user
+      await store.put({
+        ...existingUser,
+        ...identityData,
+        updatedAt: new Date(),
+      });
+      toast.success(`Updated user: ${userData.fullName}`);
+    } else {
+      // Create new user
+      await store.put(identityData);
+      toast.success(`Provisioned new user: ${userData.fullName}`);
+    }
+    
+    await tx.done;
+    
+    // Create sync record for this operation
+    await createSyncRecord('identity', existingUser ? 'update' : 'create', identityData);
+    
+    return identityData;
+  } catch (error) {
+    console.error('Error provisioning identity:', error);
+    toast.error(`Failed to provision user: ${userData.fullName}`);
+    throw error;
+  }
+};
+
+// Function to provision multiple identities at once
+export const provisionBulkIdentities = async (usersData: Array<{
+  email: string;
+  fullName: string;
+  department: string;
+  source?: string;
+}>) => {
+  try {
+    const results = await Promise.all(
+      usersData.map(userData => provisionIdentity(userData))
+    );
+    
+    toast.success(`Successfully provisioned ${results.length} users`);
+    return results;
+  } catch (error) {
+    console.error('Error in bulk provisioning:', error);
+    toast.error('Failed to complete bulk user provisioning');
+    throw error;
+  }
+};
