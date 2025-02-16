@@ -26,7 +26,7 @@ const Dashboard = () => {
     const updatedRequest = {
       ...request,
       status: newStatus,
-      approvedAt: approved ? new Date() : undefined
+      approvedAt: new Date()
     };
     
     accessRequests.set(id, updatedRequest);
