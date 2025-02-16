@@ -5,11 +5,13 @@ import { User, Lock, Home, Check, X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { accessRequests } from "./Index";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { requestId, email, status } = location.state || {};
+  const { requestId, email } = location.state || {};
+  const [currentStatus, setCurrentStatus] = useState(location.state?.status);
 
   const handleApproval = (approved: boolean) => {
     if (!requestId || !accessRequests.has(requestId)) {
@@ -18,11 +20,12 @@ const Dashboard = () => {
     }
 
     const request = accessRequests.get(requestId)!;
-    request.status = approved ? 'approved' : 'rejected';
+    const newStatus = approved ? 'approved' : 'rejected';
+    request.status = newStatus;
     accessRequests.set(requestId, request);
+    setCurrentStatus(newStatus);
     
     toast.success(`Access request ${approved ? 'approved' : 'rejected'} successfully`);
-    navigate(0); // Refresh the page to update the status
   };
 
   return (
@@ -56,10 +59,10 @@ const Dashboard = () => {
                 <div className="space-y-2">
                   <p className="text-gray-600">Email: {email}</p>
                   <p className="text-gray-600">
-                    Status: <span className="font-semibold capitalize">{status}</span>
+                    Status: <span className="font-semibold capitalize">{currentStatus}</span>
                   </p>
                 </div>
-                {status === 'pending' && (
+                {currentStatus === 'pending' && (
                   <div className="flex gap-2">
                     <Button 
                       onClick={() => handleApproval(true)}
@@ -79,10 +82,10 @@ const Dashboard = () => {
                     </Button>
                   </div>
                 )}
-                {status === 'approved' && (
+                {currentStatus === 'approved' && (
                   <p className="text-sm text-success">This request has been approved.</p>
                 )}
-                {status === 'rejected' && (
+                {currentStatus === 'rejected' && (
                   <p className="text-sm text-destructive">This request has been rejected.</p>
                 )}
               </div>
