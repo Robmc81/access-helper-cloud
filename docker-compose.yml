@@ -5,11 +5,12 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:80"
-    restart: unless-stopped
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
     environment:
       - NODE_ENV=development
-    command: ["npm", "run", "dev"]
     logging:
       driver: "json-file"
       options:
