@@ -21,9 +21,9 @@ const features = [
   },
   {
     icon: User,
-    title: "Access Request",
+    title: "Access Request History",
     description:
-      "View and manage all approved identities in the system.",
+      "View Access Request History",
     route: "/dashboard",
   },
   {
