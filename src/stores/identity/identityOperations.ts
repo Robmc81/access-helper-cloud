@@ -4,6 +4,7 @@ import { createSyncRecord } from '../sync/syncOperations';
 import { addLog } from '../logging/systemLogs';
 import { getOpenLDAPConfig, provisionToOpenLDAP } from '../ldap/ldapOperations';
 import { toast } from "sonner";
+import { identityStore } from '@/stores/accessStore';
 
 export const provisionIdentity = async (userData: {
   email: string;
@@ -17,8 +18,10 @@ export const provisionIdentity = async (userData: {
       ...userData,
       createdAt: new Date(),
       source: userData.source || 'logic_apps',
-      status: 'active',
     };
+
+    // Store in identityStore Map
+    identityStore.set(userData.email, identityData);
 
     // Store in IndexedDB
     await saveToIndexedDB('identityStore', identityData);
