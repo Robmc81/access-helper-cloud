@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Settings } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { getOpenLDAPConfig, saveOpenLDAPConfig } from "@/stores/indexedDBStore";
-import { toast } from "sonner";
+import { getOpenLDAPConfig } from "@/stores/indexedDBStore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { OpenLDAPConfigForm } from "./OpenLDAPConfigForm";
 
 export const OpenLDAPConfig = () => {
   const [config, setConfig] = useState({
@@ -17,6 +17,7 @@ export const OpenLDAPConfig = () => {
     baseDN: '',
     userContainer: '',
   });
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -28,125 +29,51 @@ export const OpenLDAPConfig = () => {
     loadConfig();
   }, []);
 
-  const handleSave = async () => {
-    try {
-      // Validate required fields
-      if (!config.url || !config.bindDN || !config.bindPassword || !config.baseDN || !config.userContainer) {
-        toast.error('Please fill in all required fields');
-        return;
-      }
-
-      await saveOpenLDAPConfig(config);
-      toast.success('OpenLDAP configuration saved successfully');
-    } catch (error) {
-      console.error('Failed to save OpenLDAP config:', error);
-      toast.error('Failed to save OpenLDAP configuration');
-    }
-  };
-
-  const handleTestConnection = async () => {
-    try {
-      // Validate required fields
-      if (!config.url || !config.bindDN || !config.bindPassword || !config.baseDN || !config.userContainer) {
-        toast.error('Please fill in all required fields before testing connection');
-        return;
-      }
-
-      // Mock LDAP test connection
-      // In a real application, this would make an actual LDAP connection attempt
-      const isValidUrl = config.url.startsWith('ldap://') || config.url.startsWith('ldaps://');
-      if (!isValidUrl) {
-        throw new Error('Invalid LDAP URL format. Must start with ldap:// or ldaps://');
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-      
-      toast.success('Successfully connected to OpenLDAP server');
-    } catch (error) {
-      console.error('OpenLDAP connection test failed:', error);
-      toast.error(error.message || 'Failed to connect to OpenLDAP server');
-    }
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>OpenLDAP Integration</CardTitle>
-        <CardDescription>Configure OpenLDAP server for user provisioning</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Enable OpenLDAP Integration</Label>
-              <p className="text-sm text-muted-foreground">
-                Automatically provision users to OpenLDAP
-              </p>
-            </div>
-            <Switch
-              checked={config.enabled}
-              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, enabled: checked }))}
-            />
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <Label>Server URL</Label>
-              <Input
-                value={config.url}
-                onChange={(e) => setConfig(prev => ({ ...prev, url: e.target.value }))}
-                placeholder="ldap://localhost:389"
-              />
-            </div>
-
-            <div>
-              <Label>Bind DN</Label>
-              <Input
-                value={config.bindDN}
-                onChange={(e) => setConfig(prev => ({ ...prev, bindDN: e.target.value }))}
-                placeholder="cn=admin,dc=example,dc=com"
-              />
-            </div>
-
-            <div>
-              <Label>Bind Password</Label>
-              <Input
-                type="password"
-                value={config.bindPassword}
-                onChange={(e) => setConfig(prev => ({ ...prev, bindPassword: e.target.value }))}
-                placeholder="Enter bind password"
-              />
-            </div>
-
-            <div>
-              <Label>Base DN</Label>
-              <Input
-                value={config.baseDN}
-                onChange={(e) => setConfig(prev => ({ ...prev, baseDN: e.target.value }))}
-                placeholder="dc=example,dc=com"
-              />
-            </div>
-
-            <div>
-              <Label>User Container</Label>
-              <Input
-                value={config.userContainer}
-                onChange={(e) => setConfig(prev => ({ ...prev, userContainer: e.target.value }))}
-                placeholder="ou=users"
-              />
+    <>
+      <Card className="p-4 hover:shadow-md transition-shadow">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">OpenLDAP Integration</h3>
+            <p className="text-sm text-gray-600">Configure OpenLDAP server for user provisioning</p>
+            <div className="flex items-center space-x-4">
+              <span className={`text-sm ${config.enabled ? 'text-green-600' : 'text-gray-600'}`}>
+                Status: {config.enabled ? 'Active' : 'Inactive'}
+              </span>
+              {config.url && (
+                <span className="text-sm text-gray-600">
+                  Server: {config.url}
+                </span>
+              )}
             </div>
           </div>
-
-          <div className="flex gap-4">
-            <Button onClick={handleSave} className="flex-1">
-              Save Configuration
-            </Button>
-            <Button onClick={handleTestConnection} variant="outline" className="flex-1">
-              Test Connection
+          <div>
+            <Button
+              variant="outline"
+              className="hover-scale"
+              onClick={() => setOpen(true)}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Configure
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>OpenLDAP Configuration</DialogTitle>
+          </DialogHeader>
+          <OpenLDAPConfigForm
+            initialConfig={config}
+            onSuccess={() => {
+              setOpen(false);
+              loadConfig();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
