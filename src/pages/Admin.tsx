@@ -11,7 +11,7 @@ type ConnectorStatus = "active" | "inactive" | "error";
 interface Connector {
   id: string;
   name: string;
-  type: "ldap" | "azure-ad" | "okta" | "custom";
+  type: "ldap" | "azure-ad" | "entra" | "custom";
   status: ConnectorStatus;
   lastSync: Date | null;
   description: string;
@@ -36,11 +36,11 @@ const initialConnectors: Connector[] = [
   },
   {
     id: "3",
-    name: "Okta Integration",
-    type: "okta",
+    name: "Microsoft Entra Integration",
+    type: "entra",
     status: "inactive",
     lastSync: null,
-    description: "Identity federation with Okta Identity Cloud"
+    description: "Modern identity and access management with Microsoft Entra"
   }
 ];
 
