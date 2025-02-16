@@ -1,11 +1,12 @@
 
 import { Button } from "@/components/ui/button";
-import { Home } from "lucide-react";
+import { Home, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BackupRestore } from "@/components/admin/BackupRestore";
 import { ConnectorSettings } from "@/components/admin/ConnectorSettings";
 import { LogsCard } from "@/components/admin/LogsCard";
 import { LogicAppsTile } from "@/components/admin/LogicAppsTile";
+import { Card } from "@/components/ui/card";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -27,6 +28,23 @@ const Admin = () => {
         </div>
 
         <div className="space-y-6">
+          <Card className="p-6">
+            <h2 className="flex items-center mb-4 text-xl font-semibold">
+              <Users className="w-5 h-5 mr-2 text-success" />
+              Identity Management
+            </h2>
+            <Button 
+              variant="outline" 
+              className="hover-scale w-full h-24"
+              onClick={() => navigate("/identities")}
+            >
+              <div className="text-center">
+                <h3 className="font-medium">Identity Store</h3>
+                <p className="text-sm text-gray-600">View and manage user identities</p>
+              </div>
+            </Button>
+          </Card>
+          
           <LogicAppsTile />
           <ConnectorSettings />
           <LogsCard />
