@@ -13,12 +13,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Info, RefreshCw } from "lucide-react";
+import { Info, RefreshCw, Edit2, Check, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 export const LogicAppsConfig = () => {
   const [testing, setTesting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [endpointUrl, setEndpointUrl] = useState(window.location.origin + '/api/provision');
 
   const testWorkflow = async () => {
     setTesting(true);
@@ -30,6 +33,20 @@ export const LogicAppsConfig = () => {
       toast.error("Failed to test Logic Apps workflow");
     } finally {
       setTesting(false);
+    }
+  };
+
+  const handleSaveEndpoint = () => {
+    if (!endpointUrl) {
+      toast.error("Endpoint URL cannot be empty");
+      return;
+    }
+    try {
+      new URL(endpointUrl); // Validate URL format
+      setIsEditing(false);
+      toast.success("Endpoint URL updated successfully");
+    } catch (e) {
+      toast.error("Please enter a valid URL");
     }
   };
 
@@ -48,9 +65,48 @@ export const LogicAppsConfig = () => {
           <p className="text-sm text-gray-600">
             Use the following endpoint in your Logic Apps workflow to provision users:
           </p>
-          <code className="block bg-gray-100 p-3 rounded-md text-sm">
-            {window.location.origin}/api/provision
-          </code>
+          <div className="relative">
+            {isEditing ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={endpointUrl}
+                  onChange={(e) => setEndpointUrl(e.target.value)}
+                  className="flex-1"
+                  placeholder="Enter endpoint URL"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSaveEndpoint}
+                  className="h-10 w-10"
+                >
+                  <Check className="h-4 w-4 text-green-500" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing(false)}
+                  className="h-10 w-10"
+                >
+                  <X className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <code className="block bg-gray-100 p-3 rounded-md text-sm flex-1">
+                  {endpointUrl}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing(true)}
+                  className="h-10 w-10"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
           <Button 
             onClick={testWorkflow}
             disabled={testing}
