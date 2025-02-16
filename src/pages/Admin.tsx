@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { BackupRestore } from "@/components/admin/BackupRestore";
 import { ConnectorSettings } from "@/components/admin/ConnectorSettings";
 import { LogsCard } from "@/components/admin/LogsCard";
+import { LogicAppsTile } from "@/components/admin/LogicAppsTile";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const Admin = () => {
         </div>
 
         <div className="space-y-6">
+          <LogicAppsTile />
           <ConnectorSettings />
           <LogsCard />
           <BackupRestore />
