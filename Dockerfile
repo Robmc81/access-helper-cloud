@@ -10,8 +10,8 @@ RUN npm install -g npm@10.8.2
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with force flag
-RUN npm install --force
+# Install dependencies
+RUN npm install
 
 # Copy source code
 COPY . .
