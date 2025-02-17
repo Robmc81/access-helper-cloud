@@ -27,9 +27,11 @@ export const GroupList = ({ onDeleteGroup }: GroupListProps) => {
   }, []);
 
   const updateGroupsData = () => {
+    console.log("Updating groups data");
     const sortedGroups = Array.from(groups.entries()).sort((a, b) => 
       a[1].name.localeCompare(b[1].name)
     );
+    console.log("Sorted groups:", sortedGroups);
     setGroupsData(sortedGroups);
   };
 
@@ -38,27 +40,33 @@ export const GroupList = ({ onDeleteGroup }: GroupListProps) => {
   };
 
   const handleAddMember = (groupId: string) => {
+    console.log("Adding member to group:", groupId);
     setSelectedGroupId(groupId);
     const currentGroup = groups.get(groupId);
     if (currentGroup) {
       // Get all users that aren't already in the group
       const allUsers = Array.from(identityStore.values());
+      console.log("All users:", allUsers);
       const filteredUsers = allUsers.filter(user => 
         !currentGroup.members.includes(user.email)
       );
+      console.log("Filtered users:", filteredUsers);
       setAvailableUsers(filteredUsers);
       setShowAddMemberDialog(true);
     }
   };
 
   const handleSelectUser = (email: string) => {
+    console.log("Selected user:", email);
     if (selectedGroupId) {
       const group = groups.get(selectedGroupId);
+      console.log("Current group:", group);
       if (group) {
         const updatedGroup = {
           ...group,
           members: [...group.members, email]
         };
+        console.log("Updated group:", updatedGroup);
         groups.set(selectedGroupId, updatedGroup);
         updateGroupsData();
         setShowAddMemberDialog(false);

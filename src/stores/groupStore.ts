@@ -33,6 +33,7 @@ export const groups = loadStoredGroups();
 // Wrap Map.prototype.set to automatically save changes
 const originalSet = groups.set.bind(groups);
 groups.set = function(key, value) {
+  console.log("Setting group:", key, value);
   const result = originalSet(key, value);
   saveGroups(groups);
   return result;
