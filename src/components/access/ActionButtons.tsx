@@ -45,14 +45,18 @@ export const ActionButtons = ({
         <AppWindow className="w-5 h-5 mr-2" />
         Request Application Access
       </Button>
-      <Button
-        size="lg"
-        className="w-full animate-fadeIn hover-scale sm:w-auto"
-        onClick={() => onRequestForOther()}
-      >
-        <Group className="w-5 h-5 mr-2" />
-        Request Group Access
-      </Button>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            size="lg"
+            className="w-full animate-fadeIn hover-scale sm:w-auto"
+            onClick={() => onRequestForOther()}
+          >
+            <Group className="w-5 h-5 mr-2" />
+            Request Group Access
+          </Button>
+        </SheetTrigger>
+      </Sheet>
     </div>
   );
 };
