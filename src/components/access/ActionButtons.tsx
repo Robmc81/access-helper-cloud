@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { User, UserPlus, AppWindow, Group } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface ActionButtonsProps {
   isRequestingAccess: boolean;
@@ -45,27 +45,14 @@ export const ActionButtons = ({
         <AppWindow className="w-5 h-5 mr-2" />
         Request Application Access
       </Button>
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            size="lg"
-            className="w-full animate-fadeIn hover-scale sm:w-auto"
-          >
-            <Group className="w-5 h-5 mr-2" />
-            Request Group Access
-          </Button>
-        </SheetTrigger>
-        <SheetTrigger asChild>
-          <Button
-            size="lg"
-            className="w-full animate-fadeIn hover-scale sm:w-auto"
-            onClick={onRequestForOther}
-          >
-            <UserPlus className="w-5 h-5 mr-2" />
-            Request Group Access for Another User
-          </Button>
-        </SheetTrigger>
-      </Sheet>
+      <Button
+        size="lg"
+        className="w-full animate-fadeIn hover-scale sm:w-auto"
+        onClick={() => onRequestForOther()}
+      >
+        <Group className="w-5 h-5 mr-2" />
+        Request Group Access
+      </Button>
     </div>
   );
 };
