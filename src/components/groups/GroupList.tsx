@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, User, Trash } from "lucide-react";
+import { Users, User, Trash, UserPlus, UserMinus } from "lucide-react";
 import { groups, Group } from "@/stores/groupStore";
-import { identityStore } from "@/stores/accessStore";
+import { identityStore, Identity } from "@/stores/accessStore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { toast } from "sonner";
 
 interface GroupListProps {
   onDeleteGroup: (groupId: string) => void;
@@ -15,17 +18,66 @@ interface GroupListProps {
 
 export const GroupList = ({ onDeleteGroup }: GroupListProps) => {
   const [groupsData, setGroupsData] = useState<[string, Group][]>([]);
+  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<Identity[]>([]);
 
   useEffect(() => {
-    // Convert Map to array and sort by name
+    updateGroupsData();
+  }, []);
+
+  const updateGroupsData = () => {
     const sortedGroups = Array.from(groups.entries()).sort((a, b) => 
       a[1].name.localeCompare(b[1].name)
     );
     setGroupsData(sortedGroups);
-  }, []);
+  };
 
   const getMemberDetails = (email: string) => {
     return identityStore.get(email);
+  };
+
+  const handleAddMember = (groupId: string) => {
+    setSelectedGroupId(groupId);
+    const currentGroup = groups.get(groupId);
+    if (currentGroup) {
+      // Get all users that aren't already in the group
+      const allUsers = Array.from(identityStore.values());
+      const filteredUsers = allUsers.filter(user => 
+        !currentGroup.members.includes(user.email)
+      );
+      setAvailableUsers(filteredUsers);
+      setShowAddMemberDialog(true);
+    }
+  };
+
+  const handleSelectUser = (email: string) => {
+    if (selectedGroupId) {
+      const group = groups.get(selectedGroupId);
+      if (group) {
+        const updatedGroup = {
+          ...group,
+          members: [...group.members, email]
+        };
+        groups.set(selectedGroupId, updatedGroup);
+        updateGroupsData();
+        setShowAddMemberDialog(false);
+        toast.success("Member added to group successfully");
+      }
+    }
+  };
+
+  const handleRemoveMember = (groupId: string, email: string) => {
+    const group = groups.get(groupId);
+    if (group) {
+      const updatedGroup = {
+        ...group,
+        members: group.members.filter(member => member !== email)
+      };
+      groups.set(groupId, updatedGroup);
+      updateGroupsData();
+      toast.success("Member removed from group successfully");
+    }
   };
 
   return (
@@ -59,24 +111,45 @@ export const GroupList = ({ onDeleteGroup }: GroupListProps) => {
             <AccordionItem value="members">
               <AccordionTrigger>View Members</AccordionTrigger>
               <AccordionContent>
+                <div className="mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAddMember(id)}
+                    className="hover-scale"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Add Member
+                  </Button>
+                </div>
                 <ScrollArea className="h-[200px] rounded-md border p-4">
                   {group.members.length > 0 ? (
                     <div className="space-y-4">
                       {group.members.map((email) => {
                         const member = getMemberDetails(email);
                         return (
-                          <div key={email} className="flex items-center gap-3">
-                            <User className="w-4 h-4 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium">
-                                {member?.fullName || email}
-                              </p>
-                              {member?.department && (
-                                <p className="text-sm text-muted-foreground">
-                                  {member.department}
+                          <div key={email} className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <User className="w-4 h-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">
+                                  {member?.fullName || email}
                                 </p>
-                              )}
+                                {member?.department && (
+                                  <p className="text-sm text-muted-foreground">
+                                    {member.department}
+                                  </p>
+                                )}
+                              </div>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveMember(id, email)}
+                              className="hover:text-destructive"
+                            >
+                              <UserMinus className="w-4 h-4" />
+                            </Button>
                           </div>
                         );
                       })}
@@ -92,6 +165,38 @@ export const GroupList = ({ onDeleteGroup }: GroupListProps) => {
           </Accordion>
         </Card>
       ))}
+
+      <Dialog open={showAddMemberDialog} onOpenChange={setShowAddMemberDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Member to Group</DialogTitle>
+          </DialogHeader>
+          <Command>
+            <CommandInput placeholder="Search users..." />
+            <CommandEmpty>No users found.</CommandEmpty>
+            <CommandGroup>
+              {availableUsers.map((user) => (
+                <CommandItem
+                  key={user.email}
+                  onSelect={() => handleSelectUser(user.email)}
+                  className="cursor-pointer"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  <div>
+                    <p>{user.fullName}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </Command>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowAddMemberDialog(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
