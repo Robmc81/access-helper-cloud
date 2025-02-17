@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, User } from "lucide-react";
+import { Users, User, Trash } from "lucide-react";
 import { groups, Group } from "@/stores/groupStore";
 import { identityStore } from "@/stores/accessStore";
 
-export const GroupList = () => {
+interface GroupListProps {
+  onDeleteGroup: (groupId: string) => void;
+}
+
+export const GroupList = ({ onDeleteGroup }: GroupListProps) => {
   const [groupsData, setGroupsData] = useState<[string, Group][]>([]);
 
   useEffect(() => {
@@ -36,9 +40,19 @@ export const GroupList = () => {
                 <p className="text-sm text-muted-foreground">{group.description}</p>
               </div>
             </div>
-            <Badge variant="secondary">
-              {group.members.length} {group.members.length === 1 ? 'member' : 'members'}
-            </Badge>
+            <div className="flex items-center gap-4">
+              <Badge variant="secondary">
+                {group.members.length} {group.members.length === 1 ? 'member' : 'members'}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:text-destructive"
+                onClick={() => onDeleteGroup(id)}
+              >
+                <Trash className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           <Accordion type="single" collapsible>
