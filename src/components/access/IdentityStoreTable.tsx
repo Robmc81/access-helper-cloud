@@ -57,7 +57,6 @@ export const IdentityStoreTable = () => {
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Department</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Source</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Added (ET)</th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -78,32 +77,11 @@ export const IdentityStoreTable = () => {
                 <td className="px-4 py-3 text-sm text-gray-500">
                   {formatDateTime(identity.createdAt)}
                 </td>
-                <td className="px-4 py-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="hover-scale"
-                    onClick={() => {
-                      navigate('/', { 
-                        state: { 
-                          requestGroupForUser: {
-                            fullName: identity.fullName,
-                            email: identity.email,
-                            department: identity.department
-                          }
-                        }
-                      });
-                    }}
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Request Group Access
-                  </Button>
-                </td>
               </tr>
             ))}
             {identities.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-3 text-sm text-gray-500 text-center">
+                <td colSpan={4} className="px-4 py-3 text-sm text-gray-500 text-center">
                   No approved identities yet
                 </td>
               </tr>
